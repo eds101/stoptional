@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:WindowedApplication xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute">
+	<mx:Button id="button" click="load()" />
+	<mx:Image id="thumb" y="24" height="150" width="150" />
+	<mx:Image id="full" y="175" />
+	<mx:Script>
+		<![CDATA[
+			import twit.TwitPicAPI
+			
+			public function load():void {
+				var tp:TwitPicAPI;
+				tp = new TwitPicAPI("mkb2014", "iivvii");
+				
+				tp.upload(listener);
+				
+				return;
+			}
+			
+			private function listener(thumburl:String, fullurl:String):void
+			{
+				thumb.source = thumburl;
+				full.source = fullurl;
+				button.label = fullurl;
+			}
+		]]>
+	</mx:Script>
+</mx:WindowedApplication>
