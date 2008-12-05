@@ -50,20 +50,22 @@ package twit
 		}
 		
 		private function fileSelected(event:Event):void
-		{
-			//var file:File = FileEvent(event).file;
-			//uploadFile(file, this.listener);
+		{			
+			File(event.target).removeEventListener(Event.SELECT, fileSelected);
+			
 			uploadFile(this.file, this.listener);
 		}
 		
 		private function uploadComplete(event:DataEvent):void
-		{
+		{			
+			File(event.target).removeEventListener(DataEvent.UPLOAD_COMPLETE_DATA, uploadComplete);
+			
 			//filter the url from the event and pass it to the listener function
 			var url:String = (new XML(event.text)).child("mediaurl")[0];
 			this.listener(
 				url.replace("twitpic.com/", "twitpic.com/show/thumb/"),
 				url.replace("twitpic.com/", "twitpic.com/show/full/")
-			);
+			);			
 		}
 	}
 }

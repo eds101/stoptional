@@ -6,14 +6,31 @@
 	<mx:Script>
 		<![CDATA[
 			import twit.TwitPicAPI
+			import twit.TwitterAPI
+			import mx.controls.Alert;
 			
 			public function load():void {
 				var tp:TwitPicAPI;
+				var t:TwitterAPI;
+				
 				tp = new TwitPicAPI("mkb2014", "iivvii");
 				
-				tp.upload(listener);
+				//tp.upload(listener);
+				
+				
+				t = new TwitterAPI("mkb2014", "iivvii");
+				t.getPublicTimeline(getTimelineListener);
+				t.postPublic("hello", postListener);
 				
 				return;
+			}
+			
+			private function getTimelineListener(sucess:Boolean, xml:XML):void {
+				Alert.show(xml.toString());
+			}
+			
+			private function postListener(success:Boolean, xml:XML):void {
+				Alert.show(xml.toString());
 			}
 			
 			private function listener(thumburl:String, fullurl:String):void

@@ -1,4 +1,72 @@
-<?xml version="1.0" encoding="utf-8"?>
-<mx:WindowedApplication xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute">
-	
-</mx:WindowedApplication>
+      <mx:WindowedApplication xmlns:mx="http://www.adobe.com/2006/mxml" xmlns="*"
+         layout="absolute"
+         creationComplete="onCreationComplete()">
+       
+         <mx:Script>
+            <![CDATA[
+               import mx.collections.ArrayCollection;
+               import mx.rpc.http.HTTPService;
+               import mx.rpc.events.ResultEvent;
+               import mx.rpc.events.FaultEvent;
+               import mx.formatters.DateFormatter;
+               import com.adobe.serialization.json.JSON;
+       
+               [Bindable]
+               private var publicTimeline:ArrayCollection;
+       
+               private function onCreationComplete():void
+               {
+                  loadPublicTimeline();
+               }
+       
+               private function loadPublicTimeline():void
+               {
+                  twitterService.send();
+               }
+       
+               private function onPublicTimelineResult( event:ResultEvent ):void
+               {
+                  var rawData:String = String( event.result );
+                  var arr:Array = JSON.decode( rawData ) as Array;
+                  publicTimeline = new ArrayCollection( arr );
+               }
+       
+               private function onPublicTimelineFault( event:FaultEvent ):void
+               {
+                  trace( event.fault.toString() );
+               }
+       
+               private function getFormattedDate( item:Object, column:DataGridColumn ):String
+               {
+                  var dateFormatter:DateFormatter = new DateFormatter();
+                  dateFormatter.formatString = "MMMM D, YYYY, J:NN:SS";
+                  return dateFormatter.format( item.created_at );
+               }
+       
+               private function getScreenName( item:Object, column:DataGridColumn ):String
+               {
+                  return item.user.screen_name;
+               }  
+       
+            ]]>
+         </mx:Script>
+       
+         <mx:HTTPService
+            id="twitterService"
+            url="http://twitter.com/statuses/public_timeline.json"
+            resultFormat="text"
+            result="onPublicTimelineResult(event)"
+            fault="onPublicTimelineFault(event)"
+            showBusyCursor="true" />
+         <mx:VBox width="100%" height="100%" paddingBottom="20" paddingLeft="20" paddingRight="20" paddingTop="20">
+            <mx:Label text="Twitter Demo" fontSize="20" fontWeight="bold" />
+            <mx:DataGrid dataProvider="{ publicTimeline }" width="100%" rowCount="20">
+               <mx:columns>
+                  <mx:DataGridColumn width="200" headerText="Screen Name" labelFunction="getScreenName" />
+                  <mx:DataGridColumn headerText="Tweet" dataField="text" />
+               </mx:columns>
+            </mx:DataGrid>
+            <mx:Button label="Refresh" width="100" height="30" click="loadPublicTimeline()" />
+         </mx:VBox>
+      </mx:WindowedApplication>
+
