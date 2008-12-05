@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:WindowedApplication xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute">
-	<mx:Button id="button" click="load()" />
+	<mx:TextInput id="user" width="50" text="user"/>
+	<mx:TextInput id="password" width="50" x="50" text="password" displayAsPassword="true"/>
+	<mx:Button id="button" click="load()" x="100"/>
 	<mx:Image id="thumb" y="24" height="150" width="150" />
 	<mx:Image id="full" y="175" />
 	<mx:Script>
@@ -13,24 +15,24 @@
 				var tp:TwitPicAPI;
 				var t:TwitterAPI;
 				
-				tp = new TwitPicAPI("mkb2014", "iivvii");
+				tp = new TwitPicAPI(user.text, password.text);
 				
 				//tp.upload(listener);
 				
 				
-				t = new TwitterAPI("mkb2014", "iivvii");
+				t = new TwitterAPI(user.text, password.text);
 				t.getPublicTimeline(getTimelineListener);
-				t.postPublic("hello", postListener);
+				t.updateStatus("hello", updateStatusListener);
 				
 				return;
 			}
 			
-			private function getTimelineListener(sucess:Boolean, xml:XML):void {
-				Alert.show(xml.toString());
+			private function getTimelineListener(success:Boolean, xml:XML):void {
+				Alert.show("success: " + success + "\n" + xml.toString());
 			}
 			
-			private function postListener(success:Boolean, xml:XML):void {
-				Alert.show(xml.toString());
+			private function updateStatusListener(success:Boolean, xml:XML):void {
+				Alert.show("success: " + success + "\n" + xml.toString());
 			}
 			
 			private function listener(thumburl:String, fullurl:String):void
