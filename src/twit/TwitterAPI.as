@@ -18,7 +18,6 @@ package twit
 		public function TwitterAPI(user:String, password:String)
 		{
 			this.request = new URLRequest();
-//			this.authorization = new URLRequestHeader("Authorization",  "Basic " + Base64.Encode(user + ":" + password));
 			this.request.requestHeaders.push(new URLRequestHeader("Authorization",  "Basic " + Base64.Encode(user + ":" + password)));
 		}
 		
@@ -30,21 +29,20 @@ package twit
 			return this.request;		
 		}
 		
+		
 		public function updateStatus(text:String, listenerUpdateStatus:Function):void {
 			this.listenerUpdateStatus = listenerUpdateStatus;
 			
 			var urlvars:URLVariables = new URLVariables();
-			 
 			urlvars.status = text;
 			
 			var urlreq = twitterRequest("http://twitter.com/statuses/update.xml", urlvars, URLRequestMethod.POST);
-	
 			try
 			{
 				var loader:URLLoader = new URLLoader(urlreq);
 				
-				loader.addEventListener(Event.COMPLETE, this.postComplete);
-				//loader.addEventListener(flash.events.HTTPStatusEvent.HTTP_RESPONSE_STATUS , this.postComplete);
+				loader.addEventListener(Event.COMPLETE, this.updateStatus);
+				//loader.addEventListener(flash.events.HTTPStatusEvent.HTTP_RESPONSE_STATUS , this.updateStatus);
 
 				loader.load(urlreq);
 			}
@@ -53,8 +51,7 @@ package twit
 				Alert.show(e.message);
 			}			
 		}
-		
-		public function postComplete(event:Event):void {
+		public function updateStatusComplete(event:Event):void {
 			try {
 				var loader:URLLoader = URLLoader(event.target);
 				var xml:XML = new XML(loader.data);
@@ -62,9 +59,10 @@ package twit
 			}
 			catch (e:Error)
 			{
-				Alert.show(e.toString());
+				this.listenerUpdateStatus(false, xml.child("text"));
 			}
 		}
+		
 		
 		
 		public function getPublicTimeline(listenerPublicTimeline:Function):void {
@@ -79,16 +77,13 @@ package twit
 				var loader:URLLoader = new URLLoader(urlreq);
 				
 				loader.addEventListener(Event.COMPLETE, this.getPublicTimelineComplete);
-				
 				loader.load(urlreq);				
 			}
 			catch(e:Error)
 			{
 				Alert.show(e.message);
 			}
-			
 		}
-		
 		public function getPublicTimelineComplete(event:Event):void {
 			try {
 				var loader:URLLoader = URLLoader(event.target);
@@ -96,7 +91,7 @@ package twit
 				this.listenerPublicTimeline(true, loader.data);
 			}
 			catch (e:Error) {
-				Alert.show(e.toString());
+				this.listenerPublicTimeline(false, loader.data);
 			}
 		}
 	}
