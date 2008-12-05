@@ -21,7 +21,7 @@
 				
 				
 				t = new TwitterAPI(user.text, password.text);
-				//t.getPublicTimeline(getTimelineListener);
+				t.getPublicTimeline(getTimelineListener);
 				t.updateStatus("hello", updateStatusListener);
 				
 				return;
