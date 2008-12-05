@@ -35,9 +35,7 @@ package twit
 			
 			var urlvars:URLVariables = new URLVariables();
 			 
-			//urlvars.status = text;
-			urlvars.user = "hh2360";
-			urlvars.text = "hi henry";
+			urlvars.status = text;
 			
 			var urlreq = twitterRequest("http://twitter.com/statuses/update.xml", urlvars, URLRequestMethod.POST);
 	
