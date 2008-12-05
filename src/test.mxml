@@ -21,18 +21,20 @@
 				
 				
 				t = new TwitterAPI(user.text, password.text);
-				t.getPublicTimeline(getTimelineListener);
+				//t.getPublicTimeline(getTimelineListener);
 				t.updateStatus("hello", updateStatusListener);
 				
 				return;
 			}
 			
-			private function getTimelineListener(success:Boolean, xml:XML):void {
-				Alert.show("success: " + success + "\n" + xml.toString());
+			public function getTimelineListener(success:Boolean, xml:XML):void {
+				Alert.show("success: " + success);
+				Alert.show(xml.toString());
 			}
 			
-			private function updateStatusListener(success:Boolean, xml:XML):void {
-				Alert.show("success: " + success + "\n" + xml.toString());
+			public function updateStatusListener(success:Boolean, xml:XML):void {
+				Alert.show("success: " + success);
+				Alert.show(xml.toString());
 			}
 			
 			private function listener(thumburl:String, fullurl:String):void
