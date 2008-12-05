@@ -14,7 +14,7 @@
 			public function load():void {
 				var tp:TwitPicAPI;
 				var t:TwitterAPI;
-				
+				 
 				tp = new TwitPicAPI(user.text, password.text);
 				
 				//tp.upload(listener);
