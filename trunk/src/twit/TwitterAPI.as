@@ -12,6 +12,7 @@ package twit
 	public class TwitterAPI
 	{
 		private var request:URLRequest;
+		private var listenerLogin:Function;
 		private var listenerUpdateStatus:Function;
 		private var listenerPublicTimeline:Function;
 		
@@ -29,6 +30,10 @@ package twit
 			return this.request;		
 		}
 		
+		public function login(user:String, password:String, listenerLogin:Function):void {
+		//http://twitter.com/account/verify_credentials.
+		
+		}
 		
 		public function updateStatus(text:String, listenerUpdateStatus:Function):void {
 			this.listenerUpdateStatus = listenerUpdateStatus;
