@@ -24,11 +24,8 @@
 		click="updateUserTimeline()"
 		/>
 	
-	<mx:Canvas id="canvas" width="100%" height="100%" y="25" autoLayout="true">
-		<mx:Label id="caption" />
-		<mx:Image id="thumb" y="24" height="150" width="150" />
-		<mx:Image id="full" y="175" />
-	</mx:Canvas>
+	<mx:Tile id="canvas" width="100%" height="100%" y="25" autoLayout="true" />
+	
 	<mx:Script>
 		<![CDATA[
 			import twit.Status;
@@ -39,6 +36,8 @@
 			
 			var twitpic:TwitPicAPI = null;
 			var twitter:TwitterAPI = null;
+			
+			var username:String = "";
 			
 			public function load():void {
 				var tp:TwitPicAPI;
@@ -52,7 +51,7 @@
 				t = new TwitterAPI(user.text, password.text);
 				//t.getPublicTimeline(getTimelineListener);
 				//t.getFriendsTimeline(10,getTimelineListener);
-				//t.getUsersTimeline("hh2360", 10, getTimelineListener);
+				//t.getUserTimeline("hh2360", 10, getTimelineListener);
 				//t.updateStatus("I am doing my project now.", updateStatusListener);
 				//t.getStatus("1041108468", getStatusListener);
 				//t.deleteStatus("1041108468", getStatusListener);
@@ -81,7 +80,7 @@
 			
 			private function updateUserTimeline():void {
 				if (this.twitter != null)
-					this.twitter.getUsersTimeline("17431601", 10, this.getTimelineListener);
+					this.twitter.getUserTimeline(this.username, 30, this.getTimelineListener);
 				else
 					Alert.show("You must be logged in to update the timeline.");
 			}
@@ -107,23 +106,15 @@
 					this.twitter = null;
 				} else {
 					this.twitpic = new TwitPicAPI(user.text, password.text);
+					this.username = user.text;
 				}
 			}
 			
-			private function getTimelineListener(success:Boolean, xml:XML):void {
+			private function getTimelineListener(success:Boolean, statuses:Array):void {
 				Alert.show("getTimelineListener>\nsuccess: " + success);
-				if (success && xml != null) {
-					/*
-					Alert.show("" + statuses.length);
+				if (success && statuses != null) {
 					for(var i:int = 0; i < statuses.length; i++) {
-						Alert.show(typeof statuses[i])
-						var item:XML = statuses[i];
-						this.canvas.addChild(new Twit(new Status(item)));
-					}
-					*/
-					for each (var item in xml.children()) {
-						//var status:Status = new Status(new XML(item));
-						this.canvas.addChild(new Twit(new Status(new XML(item))));
+						this.canvas.addChild(new Twit(new Status(new XML(statuses[i]))));
 					}
 				} else {
 					Alert.show("Error getting timeline.");
@@ -160,11 +151,7 @@
 				Alert.show(xml.toString());
 			}
 			private function twitPicListener(url:String, thumburl:String, fullurl:String):void
-			{
-				caption.text = url;
-				thumb.source = thumburl;
-				full.source = fullurl;
-				
+			{	
 				this.postImage(url);
 			}
 			
