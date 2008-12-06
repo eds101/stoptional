@@ -27,7 +27,7 @@
 				//t.updateStatus("I am doing my project now.", updateStatusListener);
 				//t.getStatus("1041108468", getStatusListener);
 				//t.deleteStatus("1041108468", getStatusListener);
-				//t.updateLocation("Washington DC", updateLocationListener);
+				//t.updateLocation("New York", updateLocationListener);
 				//t.getRateLimit(getRateLimitListener);
 				//t.getFriends("hh2360", getFriendsListener);
 				//t.getFollowers("hh2360", getFollowersListener);
