@@ -1,33 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:WindowedApplication xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute">
+	<mx:Canvas id="boxUserInfo"
+		autoLayout="true"
+		height="100" width="100%"
+		>
+		<mx:Image id="imgIcon" />
+		<mx:Text id="txtScreenName"
+			x="55"
+			/>
+		<mx:Text id="txtName"
+			x="55" y="17"
+			/>
+		<mx:Text id="txtLocation"
+			x="55" y="33"
+			/>
+		<mx:Text id="txtDescription"
+			x="0" y="50"
+			/>
+		
+		<mx:Text id="txtFollowers" />	
+	</mx:Canvas>
 	
-	<mx:TextInput id="user"
-		width="50"
-		text="user"
-		/>
-	<mx:TextInput id="password"
-		width="50" x="50"
-		text="password"
-		displayAsPassword="true"
-		/>
-	<mx:Button id="btnLogin" label="Login"
-		x="100" width="100"
-		click="login()"
-		/>
+	<mx:Canvas id="toolbar" y="75" height="25" width="100%" autoLayout="true" visible="true">
+			
+		<mx:TextInput id="username"
+			width="100"
+			text="user"
+			/>
+		<mx:TextInput id="password"
+			width="100" x="100"
+			text="password"
+			displayAsPassword="true"
+			/>
+		<mx:Button id="btnLogin" label="Login"
+			x="200" width="100"
+			click="login()"
+			/>
+		
+		<mx:Button id="btnUploadPhoto" label="Upload Photo"
+			x="300" width="100"
+			click="uploadPhoto()"
+			/>
+		<mx:Button id="btnUpdateUserTimeline" label="Update User Timeline"
+			x="400" width="100"
+			click="updateUserTimeline()"
+			/>
+		
+	</mx:Canvas>
+	<mx:Tile id="canvas" width="100%" height="100%" y="100" autoLayout="true" />
 	
-	<mx:Button id="btnUploadPhoto" label="Upload Photo"
-		x="200" width="100"
-		click="uploadPhoto()"
-		/>
-	<mx:Button id="btnUpdateUserTimeline" label="Update User Timeline"
-		x="300" width="100"
-		click="updateUserTimeline()"
-		/>
-	
-	<mx:Tile id="canvas" width="100%" height="100%" y="25" autoLayout="true" />
 	
 	<mx:Script>
 		<![CDATA[
+			import twit.User;
 			import twit.Status;
 			import twit.Twit;
 			import twit.TwitPicAPI
@@ -37,18 +62,17 @@
 			var twitpic:TwitPicAPI = null;
 			var twitter:TwitterAPI = null;
 			
-			var username:String = "";
+			var user:User = null;
 			
 			public function load():void {
 				var tp:TwitPicAPI;
 				var t:TwitterAPI;
 				 
-				tp = new TwitPicAPI(user.text, password.text);
+				tp = new TwitPicAPI(username.text, password.text);
 				
 				//tp.upload(twitPicListener);
 				
-				
-				t = new TwitterAPI(user.text, password.text);
+				t = new TwitterAPI(username.text, password.text);
 				//t.getPublicTimeline(getTimelineListener);
 				//t.getFriendsTimeline(10,getTimelineListener);
 				//t.getUserTimeline("hh2360", 10, getTimelineListener);
@@ -61,14 +85,22 @@
 				//t.getFollowers("hh2360", getFollowersListener);
 				//t.getUsers("", "keenhenry1109@gmail.com", getUsersListener);
 				
-				
 				return;
 			}
 			
 			private function login():void {
-				this.twitter = new TwitterAPI(user.text, password.text);
+				this.twitter = new TwitterAPI(username.text, password.text);
 				twitter.login(this.loginListener);
 				Alert.show("Logging in...");				
+			}
+			
+			private function loadUser(sn:String):void {
+				if (this.twitter != null) {
+					twitter.getUser(sn, "", this.loadUserListener);
+				} else {
+					//no need for error msg, since the user cannot directly invoke this method
+					//Alert.show("You are not logged in.");
+				}
 			}
 			
 			private function uploadPhoto():void {
@@ -80,9 +112,9 @@
 			
 			private function updateUserTimeline():void {
 				if (this.twitter != null)
-					this.twitter.getUserTimeline(this.username, 30, this.getTimelineListener);
+					this.twitter.getUserTimeline(this.user.id, 30, this.getTimelineListener);
 				else
-					Alert.show("You must be logged in to update the timeline.");
+					Alert.show("You must be logged in to update the timeline.");					
 			}
 			
 			private function genericListener(success:Boolean, xml:XML) {
@@ -90,11 +122,11 @@
 				Alert.show(xml.toString());
 			}
 			
-			private function loginListener(success:Boolean, authenticated:Boolean) {
+			private function loginListener(success:Boolean, authenticated:Boolean):void {
 				Alert.show("loginListener>\nsuccess: " + success);
 				Alert.show("logged in: " + authenticated);
 				
-				if (!success) {
+				if (!success || authenticated == null) {
 					Alert.show("Login failed:\n\nError sending request to server.  Please try again.");
 					
 					this.twitpic = null;
@@ -105,8 +137,52 @@
 					this.twitpic = null;
 					this.twitter = null;
 				} else {
-					this.twitpic = new TwitPicAPI(user.text, password.text);
-					this.username = user.text;
+					//logged in:
+					//load twitpic
+					this.twitpic = new TwitPicAPI(username.text, password.text);
+					//load user data
+					loadUser(username.text);
+				}
+			}
+
+			private function logoutListener(success:Boolean, loggedout:Boolean):void {
+				Alert.show("logoutListener>\nsuccess: " + success);
+				Alert.show("logged out: " + loggedout);
+				
+				if (!success || loggedout == null) {
+					Alert.show("Logout failed:\n\nError sending request to server.  Please try again.");
+					
+					//this.twitpic = null;
+					//this.twitter = null;
+				} else if (!loggedout) {
+					Alert.show("Logout failed:\n\nSession may already be terminated.");
+					
+					//this.twitpic = null;
+					//this.twitter = null;
+				} else {
+					this.twitpic = null;
+					this.twitter = null;
+					this.user = null;
+				}
+			}
+			
+			private function loadUserListener(success:Boolean, user:User):void {
+				Alert.show("loadUserListener>\n" + success);
+				if (!success) {
+					//no need for alert
+					//Alert.show("Updating user information failed.");
+				} else {
+					this.user = user;
+					
+				}
+				
+				if (this.user != null) {
+					this.imgIcon.source = user.profile_image_url;
+					this.txtScreenName.text = user.screen_name;
+					this.txtName.text = user.name;
+					this.txtLocation.text = user.location;
+					this.txtDescription.text = user.description;
+					this.txtFollowers.text = "" + user.followers_count;
 				}
 			}
 			
@@ -146,16 +222,17 @@
 				Alert.show(xml.toString());
 			}
 			
-			private function getUsersListener(success:Boolean, xml:XML):void {
+			private function getUserListener(success:Boolean, xml:XML):void {
 				Alert.show("success: " + success);
 				Alert.show(xml.toString());
 			}
+			
 			private function twitPicListener(url:String, thumburl:String, fullurl:String):void
 			{	
 				this.postImage(url);
 			}
 			
-			public function postImage(url:String) {
+			private function postImage(url:String):void {
 				if (this.twitter != null) {
 					this.twitter.updateStatus("[photo]" + url, this.updateStatusListener);
 				} else {
@@ -163,7 +240,7 @@
 				}
 			}
 			
-			public function postText(url:String) {
+			private function postText(url:String):void {
 				if (this.twitter != null) {
 					this.twitter.updateStatus(url, this.updateStatusListener);
 				} else {
