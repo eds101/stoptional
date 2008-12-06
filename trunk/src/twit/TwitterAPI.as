@@ -8,9 +8,7 @@ package twit
 	import flash.net.URLRequestMethod;
 	import flash.net.URLVariables;
 	
-	import mx.collections.XMLListCollection;
 	import mx.controls.Alert;
-	import mx.controls.List;
 
 	public class TwitterAPI
 	{
@@ -22,6 +20,12 @@ package twit
 		private var listenerUsersTimeline:Function;
 		private var listenerGetStatus:Function;
 		private var listenerDeleteStatus:Function;
+		private var listenerLogout:Function;
+		private var listenerUpdateLocation:Function;
+		private var listenerGetRateLimit:Function;
+		private var listenerGetFriends:Function;
+		private var listenerGetFollowers:Function;
+		private var listenerGetUsers:Function;
 		
 		public function TwitterAPI(user:String, password:String)
 		{
@@ -121,7 +125,7 @@ package twit
 			var vars:URLVariables = new URLVariables();
 			vars.status = text;
 			
-			var listener = updateStatusComplete;
+			var listener:Function = updateStatusComplete;
 			
 			twitterPost(url, vars, listener);
 		}
@@ -138,9 +142,7 @@ package twit
 			{
 				this.listenerUpdateStatus(false, null);
 			}
-		}
-		
-		
+		}		
 		
 		public function getPublicTimeline(listenerPublicTimeline:Function):void {
 			this.listenerPublicTimeline = listenerPublicTimeline;
@@ -284,14 +286,179 @@ package twit
 			}
 		}
 		
-		public function logout(id:String, listenerDeleteStatus:Function):void{
+		public function logout(listenerLogout:Function):void{
+           this.listenerLogout = listenerLogout;
+			
+			var url:String = "http://twitter.com/account/end_session";
+			var vars:URLVariables = new URLVariables();
 
+			var listener:Function = logoutComplete;
+			
+			twitterPost(url, vars, listener);
 		}
 		
 		public function logoutComplete(event:Event):void {
-
+           try {
+				var loader:URLLoader = URLLoader(event.target);
+				var xml:XML = new XML(loader.data);
+				
+				loader.removeEventListener(Event.COMPLETE, logoutComplete);
+				
+				if (xml.toString() == "true")
+				{
+					this.listenerLogout(true, true);
+				}
+				else
+				{
+					Alert.show("Logout failed:\n\n" + xml.child("error"));
+					this.listenerLogout(true, false);
+				}
+			}
+			catch (e:Error)
+			{
+				this.listenerLogout(false, null);
+			}			
+		}
+		
+		public function updateLocation(text:String, listenerUpdateLocation:Function):void {
+			this.listenerUpdateLocation = listenerUpdateLocation;
+			
+			var url:String = "http://twitter.com/account/update_location.xml";
+			var vars:URLVariables = new URLVariables();
+			vars.location = text;
+			
+			var listener:Function = updateLocationComplete;
+			
+			twitterPost(url, vars, listener);
+		}
+		public function updateLocationComplete(event:Event):void {
+			try {
+				var loader:URLLoader = URLLoader(event.target);
+				var xml:XML = new XML(loader.data);
+				
+				loader.removeEventListener(Event.COMPLETE, updateLocationComplete);
+				
+				this.listenerUpdateLocation(true, xml);
+			}
+			catch (e:Error)
+			{
+				this.listenerUpdateLocation(false, null);
+			}
 		}
 		
 		
+		public function getRateLimit(listenerGetRateLimit:Function):void{
+		   this.listenerGetRateLimit = listenerGetRateLimit;
+			
+		   var url:String = "http://twitter.com/account/rate_limit_status.xml";
+		   var vars:URLVariables = new URLVariables();
+			
+		   var listener:Function = getRateLimitComplete;
+			
+		   twitterGet(url, vars, listener);
+		}	
+		public function getRateLimitComplete(event:Event):void{
+		   try {
+				var loader:URLLoader = URLLoader(event.target);
+				var xml:XML = new XML(loader.data);
+				
+				loader.removeEventListener(Event.COMPLETE, getRateLimitComplete);
+				
+				this.listenerGetRateLimit(true, xml);
+			}
+			catch (e:Error)
+			{
+				this.listenerGetRateLimit(false, null);
+			}
+		}
+		
+		
+		public function getFriends(id:String, listenerGetFriends:Function):void{
+		   this.listenerGetFriends = listenerGetFriends;
+			
+		   var url:String = "http://twitter.com/statuses/friends.xml";
+		   var vars:URLVariables = new URLVariables();
+           vars.id = id;	
+			
+		   var listener:Function = getFriendsComplete;
+			
+		   twitterGet(url, vars, listener);
+		}	
+		public function getFriendsComplete(event:Event):void{
+		   try {
+				var loader:URLLoader = URLLoader(event.target);
+				var xml:XML = new XML(loader.data);
+				
+				loader.removeEventListener(Event.COMPLETE, getFriendsComplete);
+				
+				this.listenerGetFriends(true, xml);
+			}
+			catch (e:Error)
+			{
+				this.listenerGetFriends(false, null);
+			}
+		}
+		
+		
+		public function getFollowers(id:String, listenerGetFollowers:Function):void{
+		   this.listenerGetFollowers = listenerGetFollowers;
+			
+		   var url:String = "http://twitter.com/statuses/followers.xml";
+		   var vars:URLVariables = new URLVariables();
+           vars.id = id;
+			
+		   var listener:Function = getFollowersComplete;
+			
+		   twitterGet(url, vars, listener);
+		}	
+		public function getFollowersComplete(event:Event):void{
+		   try {
+				var loader:URLLoader = URLLoader(event.target);
+				var xml:XML = new XML(loader.data);
+				
+				loader.removeEventListener(Event.COMPLETE, getFollowersComplete);
+				
+				this.listenerGetFollowers(true, xml);
+			}
+			catch (e:Error)
+			{
+				this.listenerGetFollowers(false, null);
+			}
+		}
+		
+		
+		public function getUsers(id:String, email:String, listenerGetUsers:Function):void{
+		   this.listenerGetUsers = listenerGetUsers;
+			
+		   
+		   var vars:URLVariables = new URLVariables();
+           
+           if (id.length > 0) {
+           	  var url:String = "http://twitter.com/users/show/" + id + ".xml";
+	          vars.id = id;
+	       } 
+	       else {
+	       	  var url:String = "http://twitter.com/users/show.xml";
+              vars.email = email;
+           }		
+		   
+		   var listener:Function = getUsersComplete;
+			
+		   twitterGet(url, vars, listener);
+		}	
+		public function getUsersComplete(event:Event):void{
+		   try {
+				var loader:URLLoader = URLLoader(event.target);
+				var xml:XML = new XML(loader.data);
+				
+				loader.removeEventListener(Event.COMPLETE, getUsersComplete);
+				
+				this.listenerGetUsers(true, xml);
+			}
+			catch (e:Error)
+			{
+				this.listenerGetUsers(false, null);
+			}
+		}
 	}
 }
