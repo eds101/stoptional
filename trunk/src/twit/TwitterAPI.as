@@ -1,13 +1,16 @@
 package twit
 {	
 	import flash.events.Event;
+	import flash.events.HTTPStatusEvent;
 	import flash.net.URLLoader;
 	import flash.net.URLRequest;
 	import flash.net.URLRequestHeader;
 	import flash.net.URLRequestMethod;
 	import flash.net.URLVariables;
 	
+	import mx.collections.XMLListCollection;
 	import mx.controls.Alert;
+	import mx.controls.List;
 
 	public class TwitterAPI
 	{
@@ -23,10 +26,10 @@ package twit
 		public function TwitterAPI(user:String, password:String)
 		{
 			this.request = new URLRequest();
-			this.request.requestHeaders.push(new URLRequestHeader("Authorization",  "Basic " + Base64.Encode(user + ":" + password)));
+			this.request.requestHeaders = [new URLRequestHeader("Authorization",  "Basic " + Base64.Encode(user + ":" + password))];
 		}
 		
-		public function twitterRequest(url:String, data:URLVariables, method:String):URLRequest {
+		private function twitterRequest(url:String, data:URLVariables, method:String):URLRequest {
 			this.request.url = url;
 			this.request.method = method;
 			this.request.data = data;
@@ -34,7 +37,7 @@ package twit
 			return this.request;		
 		}
 		
-		public function twitterGet(url:String, vars:URLVariables, listener:Function):void {
+		private function twitterGet(url:String, vars:URLVariables, listener:Function):void {
 			var urlreq:URLRequest = twitterRequest(url, vars, URLRequestMethod.GET);
 			
 			try
@@ -42,6 +45,7 @@ package twit
 				var loader:URLLoader = new URLLoader(urlreq);
 				
 				loader.addEventListener(Event.COMPLETE, listener);
+				loader.addEventListener(flash.events.HTTPStatusEvent.HTTP_RESPONSE_STATUS, listenerFail);
 				loader.load(urlreq);
 			}
 			catch(e:Error)
@@ -50,7 +54,7 @@ package twit
 			}
 		}
 		
-		public function twitterPost(url:String, vars:URLVariables, listener:Function):void {
+		private function twitterPost(url:String, vars:URLVariables, listener:Function):void {
 			var urlreq:URLRequest = twitterRequest(url, vars, URLRequestMethod.POST);
 			
 			try
@@ -66,7 +70,13 @@ package twit
 			}
 		}
 		
-		public function login(user:String, password:String, listenerLogin:Function):void {
+		private function listenerFail(event:HTTPStatusEvent) 
+		{
+			if (event.status != 200)
+				Alert.show("Error interfacing with Twitter API:\n" + event.responseURL + "\n\n" + "Status:" + event.status);
+		}
+		
+		public function login(listenerLogin:Function):void {
 			this.listenerLogin = listenerLogin;
 			
 			var url:String = "http://twitter.com/account/verify_credentials.xml";
@@ -85,13 +95,24 @@ package twit
 				
 				loader.removeEventListener(Event.COMPLETE, loginComplete);
 				
-				this.listenerLogin(true, xml);
+				if (xml.toString() == "true")
+				{
+					this.listenerLogin(true, true);
+				}
+				else
+				{
+					Alert.show("Twitter authentication failed:\n\n" + xml.child("error"));
+					this.listenerLogin(true, false);
+				}
 			}
 			catch (e:Error)
 			{
 				this.listenerLogin(false, null);
 			}			
 		}
+		
+		
+		
 		
 		public function updateStatus(text:String, listenerUpdateStatus:Function):void {
 			this.listenerUpdateStatus = listenerUpdateStatus;
@@ -138,7 +159,15 @@ package twit
 				
 				loader.removeEventListener(Event.COMPLETE, getPublicTimelineComplete);
 				
-				this.listenerPublicTimeline(true, xml);
+				var statuses:Array = new Array();
+				
+				var list:XMLList = xml.status;
+				
+				for (var i:int = 0; i < list.length(); i++) {
+					statuses.push(list[i]);
+				}
+				
+				this.listenerPublicTimeline(true, statuses);
 			}
 			catch (e:Error) {
 								
