@@ -17,7 +17,7 @@
 				 
 				tp = new TwitPicAPI(user.text, password.text);
 				
-				//tp.upload(listener);
+				//tp.upload(twitPicListener);
 				
 				
 				t = new TwitterAPI(user.text, password.text);
@@ -32,22 +32,27 @@
 				return;
 			}
 			
-			public function getTimelineListener(success:Boolean, xml:XML):void {
+			private function genericListener(success:Boolean, xml:XML) {
 				Alert.show("success: " + success);
 				Alert.show(xml.toString());
 			}
 			
-			public function updateStatusListener(success:Boolean, xml:XML):void {
+			private function loginListener(success:Boolean, authenticated:Boolean) {
+				Alert.show("success: " + success);
+				Alert.show("logged in: " + authenticated);
+			}
+			
+			private function getTimelineListener(success:Boolean, statuses:Array):void {
+				Alert.show("success: " + success);
+				Alert.show("" + statuses.length);
+			}
+			
+			private function updateStatusListener(success:Boolean, xml:XML):void {
 				Alert.show("success: " + success);
 				Alert.show(xml.toString());
 			}
 			
-			private function getStatusListener(success:Boolean, xml:XML):void {
-				Alert.show("success: " + success);
-				Alert.show(xml.toString());
-			}
-			
-			private function listener(thumburl:String, fullurl:String):void
+			private function twitPicListener(thumburl:String, fullurl:String):void
 			{
 				thumb.source = thumburl;
 				full.source = fullurl;
