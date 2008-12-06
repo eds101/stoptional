@@ -63,6 +63,7 @@ package twit
 			//filter the url from the event and pass it to the listener function
 			var url:String = (new XML(event.text)).child("mediaurl")[0];
 			this.listener(
+				url,
 				url.replace("twitpic.com/", "twitpic.com/show/thumb/"),
 				url.replace("twitpic.com/", "twitpic.com/show/full/")
 			);			
