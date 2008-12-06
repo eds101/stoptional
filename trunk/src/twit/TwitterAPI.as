@@ -25,7 +25,7 @@ package twit
 		private var listenerGetRateLimit:Function;
 		private var listenerGetFriends:Function;
 		private var listenerGetFollowers:Function;
-		private var listenerGetUsers:Function;
+		private var listenerGetUser:Function;
 		
 		public function TwitterAPI(user:String, password:String)
 		{
@@ -66,6 +66,7 @@ package twit
 				var loader:URLLoader = new URLLoader(urlreq);
 				
 				loader.addEventListener(Event.COMPLETE, listener);
+				loader.addEventListener(flash.events.HTTPStatusEvent.HTTP_RESPONSE_STATUS, listenerFail);
 				loader.load(urlreq);
 			}
 			catch(e:Error)
@@ -85,9 +86,6 @@ package twit
 			
 			var url:String = "http://twitter.com/account/verify_credentials.xml";
 			var vars:URLVariables = new URLVariables();
-			//vars.var1 = "var1";
-			//vars.var2 = "var2";
-			//vars.var3 = "var3";
 			var listener:Function = loginComplete;
 			
 			twitterGet(url, vars, listener);
@@ -116,6 +114,39 @@ package twit
 		}
 		
 		
+		public function logout(listenerLogout:Function):void{
+           this.listenerLogout = listenerLogout;
+			
+			var url:String = "http://twitter.com/account/end_session";
+			var vars:URLVariables = new URLVariables();
+
+			var listener:Function = logoutComplete;
+			
+			twitterPost(url, vars, listener);
+		}
+		
+		public function logoutComplete(event:Event):void {
+           try {
+				var loader:URLLoader = URLLoader(event.target);
+				var xml:XML = new XML(loader.data);
+				
+				loader.removeEventListener(Event.COMPLETE, logoutComplete);
+				
+				if (xml.child("error") == "This method requires a POST.")
+				{
+					this.listenerLogout(true, true);
+				}
+				else
+				{
+					Alert.show("Logout failed:\n\n" + xml);
+					this.listenerLogout(true, false);
+				}
+			}
+			catch (e:Error)
+			{
+				this.listenerLogout(false, null);
+			}			
+		}
 		
 		
 		public function updateStatus(text:String, listenerUpdateStatus:Function):void {
@@ -240,7 +271,7 @@ package twit
 				this.listenerUserTimeline(true, statuses);
 			}
 			catch (e:Error) {
-				Alert.show(e.message);			
+				Alert.show(e.message);
 				this.listenerUserTimeline(false, null);
 			}
 		}
@@ -298,41 +329,7 @@ package twit
 				this.listenerDeleteStatus(false, null);
 			}
 		}
-		
-		public function logout(listenerLogout:Function):void{
-           this.listenerLogout = listenerLogout;
-			
-			var url:String = "http://twitter.com/account/end_session";
-			var vars:URLVariables = new URLVariables();
 
-			var listener:Function = logoutComplete;
-			
-			twitterPost(url, vars, listener);
-		}
-		
-		public function logoutComplete(event:Event):void {
-           try {
-				var loader:URLLoader = URLLoader(event.target);
-				var xml:XML = new XML(loader.data);
-				
-				loader.removeEventListener(Event.COMPLETE, logoutComplete);
-				
-				if (xml.toString() == "true")
-				{
-					this.listenerLogout(true, true);
-				}
-				else
-				{
-					Alert.show("Logout failed:\n\n" + xml.child("error"));
-					this.listenerLogout(true, false);
-				}
-			}
-			catch (e:Error)
-			{
-				this.listenerLogout(false, null);
-			}			
-		}
-		
 		public function updateLocation(text:String, listenerUpdateLocation:Function):void {
 			this.listenerUpdateLocation = listenerUpdateLocation;
 			
@@ -440,8 +437,8 @@ package twit
 		}
 		
 		
-		public function getUsers(id:String, email:String, listenerGetUsers:Function):void{
-		   this.listenerGetUsers = listenerGetUsers;
+		public function getUser(id:String, email:String, listenerGetUser:Function):void{
+		   this.listenerGetUser = listenerGetUser;
 			
 		   
 		   var vars:URLVariables = new URLVariables();
@@ -455,22 +452,21 @@ package twit
               vars.email = email;
            }		
 		   
-		   var listener:Function = getUsersComplete;
+		   var listener:Function = getUserComplete;
 			
 		   twitterGet(url, vars, listener);
 		}	
-		public function getUsersComplete(event:Event):void{
+		public function getUserComplete(event:Event):void{
 		   try {
 				var loader:URLLoader = URLLoader(event.target);
 				var xml:XML = new XML(loader.data);
 				
-				loader.removeEventListener(Event.COMPLETE, getUsersComplete);
-				
-				this.listenerGetUsers(true, xml);
+				loader.removeEventListener(Event.COMPLETE, getUserComplete);
+				this.listenerGetUser(true, new User(new XML(xml)));
 			}
 			catch (e:Error)
 			{
-				this.listenerGetUsers(false, null);
+				this.listenerGetUser(false, null);
 			}
 		}
 	}
