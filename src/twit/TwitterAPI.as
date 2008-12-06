@@ -17,7 +17,7 @@ package twit
 		private var listenerUpdateStatus:Function;
 		private var listenerPublicTimeline:Function;
 		private var listenerFriendsTimeline:Function;
-		private var listenerUsersTimeline:Function;
+		private var listenerUserTimeline:Function;
 		private var listenerGetStatus:Function;
 		private var listenerDeleteStatus:Function;
 		private var listenerLogout:Function;
@@ -165,7 +165,7 @@ package twit
 				var list:XMLList = xml.status;
 				
 				for (var i:int = 0; i < list.length(); i++) {
-					statuses.push(list[i]);
+					statuses.push(new XML(list[i]));
 				}
 				
 				this.listenerPublicTimeline(true, statuses);
@@ -199,7 +199,7 @@ package twit
 				var list:XMLList = xml.status;
 				
 				for (var i:int = 0; i < list.length(); i++) {
-					statuses.push(list[i]);
+					statuses.push(new XML(list[i]));
 				}
 				
 				this.listenerFriendsTimeline(true, statuses);
@@ -210,43 +210,38 @@ package twit
 			}
 		}
 		
-		public function getUsersTimeline (id:String, count:int, listenerUsersTimeline:Function):void {
-			this.listenerUsersTimeline = listenerUsersTimeline;
+		public function getUserTimeline (id:String, count:int, listenerUserTimeline:Function):void {
+			this.listenerUserTimeline = listenerUserTimeline;
 			
 			var url:String = "http://twitter.com/statuses/user_timeline.xml";
 			var vars:URLVariables = new URLVariables();
 			vars.id = id;
 			vars.count = count;
 			
-			var listener:Function = getUsersTimelineComplete;
+			var listener:Function = getUserTimelineComplete;
 			
 			twitterGet(url, vars, listener);
 		}
 		
-		public function getUsersTimelineComplete(event:Event):void {
+		public function getUserTimelineComplete(event:Event):void {
            try {
 				var loader:URLLoader = URLLoader(event.target);
 				var xml:XML = new XML(loader.data);
 				
-				loader.removeEventListener(Event.COMPLETE, getUsersTimelineComplete);
-				/*
-				var statuses:Array = new Array();
-//				var list:XMLList = xml.status;
-	//			Alert.show("xml.status is " + typeof xml.status);
+				loader.removeEventListener(Event.COMPLETE, getUserTimelineComplete);
 				
-				//for (var i:int = 0; i < list.length; i++) {
-				for each (var item:XML in xml.status) {
-					Alert.show ("item is " + typeof item);
-					statuses.push(item);
+				var statuses:Array = new Array();
+				var list:XMLList = xml.status;
+				
+				for (var i:int = 0; i < list.length(); i++) {
+					statuses.push(new XML(list[i]));
 				}
 				
-				Alert.show("listenerUsersTimeline invoking..." + statuses.toString());
-				*/
-				this.listenerUsersTimeline(true, xml);
+				this.listenerUserTimeline(true, statuses);
 			}
 			catch (e:Error) {
 				Alert.show(e.message);			
-				this.listenerUsersTimeline(false, null);
+				this.listenerUserTimeline(false, null);
 			}
 		}
 		
