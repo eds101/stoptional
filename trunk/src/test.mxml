@@ -1,15 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:WindowedApplication xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute">
-	<mx:TextInput id="user" width="50" text="user"/>
-	<mx:TextInput id="password" width="50" x="50" text="password" displayAsPassword="true"/>
-	<mx:Button id="button" click="load()" x="100"/>
-	<mx:Image id="thumb" y="24" height="150" width="150" />
-	<mx:Image id="full" y="175" />
+	
+	<mx:TextInput id="user"
+		width="50"
+		text="user"
+		/>
+	<mx:TextInput id="password"
+		width="50" x="50"
+		text="password"
+		displayAsPassword="true"
+		/>
+	<mx:Button id="btnLogin" label="Login"
+		x="100" width="100"
+		click="login()"
+		/>
+	
+	<mx:Button id="btnUploadPhoto" label="Upload Photo"
+		x="200" width="100"
+		click="uploadPhoto()"
+		/>
+	<mx:Button id="btnUpdateUserTimeline" label="Update User Timeline"
+		x="300" width="100"
+		click="updateUserTimeline()"
+		/>
+	
+	<mx:Canvas id="canvas" width="100%" height="100%" y="25" autoLayout="true">
+		<mx:Label id="caption" />
+		<mx:Image id="thumb" y="24" height="150" width="150" />
+		<mx:Image id="full" y="175" />
+	</mx:Canvas>
 	<mx:Script>
 		<![CDATA[
+			import twit.Status;
+			import twit.Twit;
 			import twit.TwitPicAPI
 			import twit.TwitterAPI
 			import mx.controls.Alert;
+			
+			var twitpic:TwitPicAPI = null;
+			var twitter:TwitterAPI = null;
 			
 			public function load():void {
 				var tp:TwitPicAPI;
@@ -37,23 +66,72 @@
 				return;
 			}
 			
+			private function login():void {
+				this.twitter = new TwitterAPI(user.text, password.text);
+				twitter.login(this.loginListener);
+				Alert.show("Logging in...");				
+			}
+			
+			private function uploadPhoto():void {
+				if (this.twitpic != null)
+					this.twitpic.upload(this.twitPicListener);
+				else
+					Alert.show("You must be logged in to upload an image.");
+			}
+			
+			private function updateUserTimeline():void {
+				if (this.twitter != null)
+					this.twitter.getUsersTimeline("17431601", 10, this.getTimelineListener);
+				else
+					Alert.show("You must be logged in to update the timeline.");
+			}
+			
 			private function genericListener(success:Boolean, xml:XML) {
-				Alert.show("success: " + success);
+				Alert.show("genericListener>\nsuccess: " + success);
 				Alert.show(xml.toString());
 			}
 			
 			private function loginListener(success:Boolean, authenticated:Boolean) {
-				Alert.show("success: " + success);
+				Alert.show("loginListener>\nsuccess: " + success);
 				Alert.show("logged in: " + authenticated);
+				
+				if (!success) {
+					Alert.show("Login failed:\n\nError sending request to server.  Please try again.");
+					
+					this.twitpic = null;
+					this.twitter = null;
+				} else if (!authenticated) {
+					Alert.show("Login failed:\n\nAuthentication rejected.  Please re-enter your username and password.");
+					
+					this.twitpic = null;
+					this.twitter = null;
+				} else {
+					this.twitpic = new TwitPicAPI(user.text, password.text);
+				}
 			}
 			
-			private function getTimelineListener(success:Boolean, statuses:Array):void {
-				Alert.show("success: " + success);
-				Alert.show("" + statuses.length);
+			private function getTimelineListener(success:Boolean, xml:XML):void {
+				Alert.show("getTimelineListener>\nsuccess: " + success);
+				if (success && xml != null) {
+					/*
+					Alert.show("" + statuses.length);
+					for(var i:int = 0; i < statuses.length; i++) {
+						Alert.show(typeof statuses[i])
+						var item:XML = statuses[i];
+						this.canvas.addChild(new Twit(new Status(item)));
+					}
+					*/
+					for each (var item in xml.children()) {
+						//var status:Status = new Status(new XML(item));
+						this.canvas.addChild(new Twit(new Status(new XML(item))));
+					}
+				} else {
+					Alert.show("Error getting timeline.");
+				}
 			}
 			
 			private function updateStatusListener(success:Boolean, xml:XML):void {
-				Alert.show("success: " + success);
+				Alert.show("updateStatusListener>\nsuccess: " + success);
 				Alert.show(xml.toString());
 			}
 			
@@ -81,14 +159,30 @@
 				Alert.show("success: " + success);
 				Alert.show(xml.toString());
 			}
-			
-			private function twitPicListener(thumburl:String, fullurl:String):void
+			private function twitPicListener(url:String, thumburl:String, fullurl:String):void
 			{
+				caption.text = url;
 				thumb.source = thumburl;
 				full.source = fullurl;
-				button.label = fullurl;
+				
+				this.postImage(url);
 			}
 			
+			public function postImage(url:String) {
+				if (this.twitter != null) {
+					this.twitter.updateStatus("[photo]" + url, this.updateStatusListener);
+				} else {
+					Alert.show ("You must login before you may post an image.");
+				}
+			}
+			
+			public function postText(url:String) {
+				if (this.twitter != null) {
+					this.twitter.updateStatus(url, this.updateStatusListener);
+				} else {
+					Alert.show ("You must login before you may post a message.");
+				}
+			}
 		]]>
 	</mx:Script>
 </mx:WindowedApplication>
