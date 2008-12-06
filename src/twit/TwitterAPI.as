@@ -162,7 +162,6 @@ package twit
 				loader.removeEventListener(Event.COMPLETE, getPublicTimelineComplete);
 				
 				var statuses:Array = new Array();
-				
 				var list:XMLList = xml.status;
 				
 				for (var i:int = 0; i < list.length(); i++) {
@@ -196,7 +195,14 @@ package twit
 				
 				loader.removeEventListener(Event.COMPLETE, getFriendsTimelineComplete);
 				
-				this.listenerFriendsTimeline(true, xml);
+				var statuses:Array = new Array();
+				var list:XMLList = xml.status;
+				
+				for (var i:int = 0; i < list.length(); i++) {
+					statuses.push(list[i]);
+				}
+				
+				this.listenerFriendsTimeline(true, statuses);
 			}
 			catch (e:Error) {
 								
@@ -223,11 +229,23 @@ package twit
 				var xml:XML = new XML(loader.data);
 				
 				loader.removeEventListener(Event.COMPLETE, getUsersTimelineComplete);
+				/*
+				var statuses:Array = new Array();
+//				var list:XMLList = xml.status;
+	//			Alert.show("xml.status is " + typeof xml.status);
 				
+				//for (var i:int = 0; i < list.length; i++) {
+				for each (var item:XML in xml.status) {
+					Alert.show ("item is " + typeof item);
+					statuses.push(item);
+				}
+				
+				Alert.show("listenerUsersTimeline invoking..." + statuses.toString());
+				*/
 				this.listenerUsersTimeline(true, xml);
 			}
 			catch (e:Error) {
-								
+				Alert.show(e.message);			
 				this.listenerUsersTimeline(false, null);
 			}
 		}
