@@ -23,10 +23,15 @@
 				t = new TwitterAPI(user.text, password.text);
 				//t.getPublicTimeline(getTimelineListener);
 				//t.getFriendsTimeline(10,getTimelineListener);
-				//t.getUsersTimeline("hh2360",10, getTimelineListener);
-				//t.updateStatus("I am hungry.", updateStatusListener);
+				//t.getUsersTimeline("hh2360", 10, getTimelineListener);
+				//t.updateStatus("I am doing my project now.", updateStatusListener);
 				//t.getStatus("1041108468", getStatusListener);
 				//t.deleteStatus("1041108468", getStatusListener);
+				//t.updateLocation("Washington DC", updateLocationListener);
+				//t.getRateLimit(getRateLimitListener);
+				//t.getFriends("hh2360", getFriendsListener);
+				//t.getFollowers("hh2360", getFollowersListener);
+				//t.getUsers("", "keenhenry1109@gmail.com", getUsersListener);
 				
 				
 				return;
@@ -48,6 +53,31 @@
 			}
 			
 			private function updateStatusListener(success:Boolean, xml:XML):void {
+				Alert.show("success: " + success);
+				Alert.show(xml.toString());
+			}
+			
+			private function updateLocationListener(success:Boolean, xml:XML):void {
+				Alert.show("success: " + success);
+				Alert.show(xml.toString());
+			}
+			
+			private function getRateLimitListener(success:Boolean, xml:XML):void {
+				Alert.show("success: " + success);
+				Alert.show(xml.toString());
+			}
+			
+			private function getFriendsListener(success:Boolean, xml:XML):void {
+				Alert.show("success: " + success);
+				Alert.show(xml.toString());
+			}
+			
+			private function getFollowersListener(success:Boolean, xml:XML):void {
+				Alert.show("success: " + success);
+				Alert.show(xml.toString());
+			}
+			
+			private function getUsersListener(success:Boolean, xml:XML):void {
 				Alert.show("success: " + success);
 				Alert.show(xml.toString());
 			}
