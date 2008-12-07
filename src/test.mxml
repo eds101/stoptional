@@ -45,6 +45,11 @@
 			x="400" width="100"
 			click="updateUserTimeline()"
 			/>
+			
+		<mx:Button id="btnLoad" label="Load"
+			x="500" y="0" width="100"
+			click= "load()"
+			/>
 		
 	</mx:Canvas>
 	<mx:Tile id="canvas" width="100%" height="100%" y="100" autoLayout="true" />
@@ -84,6 +89,10 @@
 				//t.getFriends("hh2360", getFriendsListener);
 				//t.getFollowers("hh2360", getFollowersListener);
 				//t.getUsers("", "keenhenry1109@gmail.com", getUsersListener);
+				//t.getDirectMsg(getDirectMsgListener);
+				//t.getSentMsg(getSentMsgListener);
+				//t.sentDirectMsg("mkb2014", "What are you doing now?", getSentDirectMsgListener);
+				//t.destroyDirectMsg("44154900", getDestroyMsgListener);
 				
 				return;
 			}
@@ -223,6 +232,26 @@
 			}
 			
 			private function getUserListener(success:Boolean, xml:XML):void {
+				Alert.show("success: " + success);
+				Alert.show(xml.toString());
+			}
+			
+			private function getDirectMsgListener(success:Boolean, xml:XML):void {
+				Alert.show("success: " + success);
+				Alert.show(xml.toString());
+			}
+			
+			private function getSentMsgListener(success:Boolean, xml:XML):void {
+				Alert.show("success: " + success);
+				Alert.show(xml.toString());
+			}
+			
+			private function getSentDirectMsgListener(success:Boolean, xml:XML):void {
+				Alert.show("success: " + success);
+				Alert.show(xml.toString());
+			}
+			
+			private function getDestroyMsgListener(success:Boolean, xml:XML):void {
 				Alert.show("success: " + success);
 				Alert.show(xml.toString());
 			}
