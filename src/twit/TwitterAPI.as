@@ -26,6 +26,10 @@ package twit
 		private var listenerGetFriends:Function;
 		private var listenerGetFollowers:Function;
 		private var listenerGetUser:Function;
+		private var listenerGetDirectMsg:Function;
+		private var listenerGetSentMsg:Function;
+		private var listenerSentDirectMsg:Function;
+		private var listenerDestroyDirectMsg:Function;
 		
 		public function TwitterAPI(user:String, password:String)
 		{
@@ -469,5 +473,110 @@ package twit
 				this.listenerGetUser(false, null);
 			}
 		}
+		
+		
+		public function getDirectMsg(listenerGetDirectMsg:Function):void{
+		   this.listenerGetDirectMsg = listenerGetDirectMsg;			
+		   
+           var url:String = "http://twitter.com/direct_messages.xml";
+           var vars:URLVariables = new URLVariables();
+		   
+		   var listener:Function = getDirectMsgComplete;
+			
+		   twitterGet(url, vars, listener);
+		}	
+		public function getDirectMsgComplete(event:Event):void{
+		   try {
+				var loader:URLLoader = URLLoader(event.target);
+				var xml:XML = new XML(loader.data);
+				
+				loader.removeEventListener(Event.COMPLETE, getDirectMsgComplete);
+				this.listenerGetDirectMsg(true, xml);
+			}
+			catch (e:Error)
+			{
+				this.listenerGetDirectMsg(false, null);
+			}
+		}
+		
+		
+		public function getSentMsg(listenerGetSentMsg:Function):void{
+		   this.listenerGetSentMsg = listenerGetSentMsg;			
+		   
+           var url:String = "http://twitter.com/direct_messages/sent.xml";
+           var vars:URLVariables = new URLVariables();
+		   
+		   var listener:Function = getSentMsgComplete;
+			
+		   twitterGet(url, vars, listener);
+		}	
+		public function getSentMsgComplete(event:Event):void{
+		   try {
+				var loader:URLLoader = URLLoader(event.target);
+				var xml:XML = new XML(loader.data);
+				
+				loader.removeEventListener(Event.COMPLETE, getSentMsgComplete);
+				this.listenerGetSentMsg(true, xml);
+			}
+			catch (e:Error)
+			{
+				this.listenerGetSentMsg(false, null);
+			}
+		}
+		
+		
+		public function sentDirectMsg(id:String, msg:String, listenerSentDirectMsg:Function):void{
+		   this.listenerSentDirectMsg = listenerSentDirectMsg;			
+		   
+           var url:String = "http://twitter.com/direct_messages/new.xml";
+           var vars:URLVariables = new URLVariables();
+		   vars.user = id;
+		   vars.text = msg;
+		   
+		   var listener:Function = sentDirectMsgComplete;
+			
+		   twitterPost(url, vars, listener);
+		}	
+		public function sentDirectMsgComplete(event:Event):void{
+		   try {
+				var loader:URLLoader = URLLoader(event.target);
+				var xml:XML = new XML(loader.data);
+				
+				loader.removeEventListener(Event.COMPLETE, sentDirectMsgComplete);
+				this.listenerSentDirectMsg(true, xml);
+			}
+			catch (e:Error)
+			{
+				this.listenerSentDirectMsg(false, null);
+			}
+		}
+		
+		
+		public function destroyDirectMsg(id:String, listenerDestroyDirectMsg:Function):void{
+		   this.listenerDestroyDirectMsg = listenerDestroyDirectMsg;			
+		   
+           var url:String = "http://twitter.com/direct_messages/destroy/" + id + ".xml";
+           var vars:URLVariables = new URLVariables();
+		   vars.id = id;
+		   
+		   var listener:Function = destroyDirectMsgComplete;
+			
+		   twitterPost(url, vars, listener);
+		}	
+		public function destroyDirectMsgComplete(event:Event):void{
+		   try {
+				var loader:URLLoader = URLLoader(event.target);
+				var xml:XML = new XML(loader.data);
+				
+				loader.removeEventListener(Event.COMPLETE, destroyDirectMsgComplete);
+				this.listenerDestroyDirectMsg(true, xml);
+			}
+			catch (e:Error)
+			{
+				this.listenerDestroyDirectMsg(false, null);
+			}
+		}
+		
+		
 	}
 }
