@@ -28,7 +28,7 @@ package twit
 		private var listenerGetUser:Function;
 		private var listenerGetDirectMsg:Function;
 		private var listenerGetSentMsg:Function;
-		private var listenerSentDirectMsg:Function;
+		private var listenerSendDirectMsg:Function;
 		private var listenerDestroyDirectMsg:Function;
 		
 		public function TwitterAPI(user:String, password:String)
@@ -526,29 +526,29 @@ package twit
 		}
 		
 		
-		public function sentDirectMsg(id:String, msg:String, listenerSentDirectMsg:Function):void{
-		   this.listenerSentDirectMsg = listenerSentDirectMsg;			
-		   
-           var url:String = "http://twitter.com/direct_messages/new.xml";
-           var vars:URLVariables = new URLVariables();
-		   vars.user = id;
-		   vars.text = msg;
-		   
-		   var listener:Function = sentDirectMsgComplete;
+		public function sendDirectMsg(id:String, msg:String, listenerSendDirectMsg:Function):void{
+			this.listenerSendDirectMsg = listenerSendDirectMsg;
+			  
+			var url:String = "http://twitter.com/direct_messages/new.xml";
+			var vars:URLVariables = new URLVariables();
+			vars.user = id;
+			vars.text = msg;
+			   
+			var listener:Function = sendDirectMsgComplete;
 			
-		   twitterPost(url, vars, listener);
-		}	
-		public function sentDirectMsgComplete(event:Event):void{
-		   try {
+			twitterPost(url, vars, listener);
+		}
+		public function sendDirectMsgComplete(event:Event):void{
+			try {
 				var loader:URLLoader = URLLoader(event.target);
 				var xml:XML = new XML(loader.data);
 				
-				loader.removeEventListener(Event.COMPLETE, sentDirectMsgComplete);
-				this.listenerSentDirectMsg(true, xml);
+				loader.removeEventListener(Event.COMPLETE, sendDirectMsgComplete);
+				this.listenerSendDirectMsg(true, xml);
 			}
 			catch (e:Error)
 			{
-				this.listenerSentDirectMsg(false, null);
+				this.listenerSendDirectMsg(false, null);
 			}
 		}
 		
