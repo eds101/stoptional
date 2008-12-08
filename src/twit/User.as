@@ -15,8 +15,6 @@ package twit
 				
 		public function User(xml:XML)
 		{
-			Alert.show(xml);
-				
 			this.id = xml.child("id");
 			this.name = xml.child("name");
 			this.screen_name = xml.child("screen_name");
