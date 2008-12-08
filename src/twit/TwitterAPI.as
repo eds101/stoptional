@@ -34,6 +34,7 @@ package twit
 		public function TwitterAPI(user:String, password:String)
 		{
 			this.request = new URLRequest();
+			this.request.authenticate = false;
 			this.request.requestHeaders = [new URLRequestHeader("Authorization",  "Basic " + Base64.Encode(user + ":" + password))];
 		}
 		
@@ -79,7 +80,7 @@ package twit
 			}
 		}
 		
-		private function listenerFail(event:HTTPStatusEvent) 
+		private function listenerFail(event:HTTPStatusEvent):void 
 		{
 			if (event.status != 200)
 				Alert.show("Error interfacing with Twitter API:\n" + event.responseURL + "\n\n" + "Status:" + event.status);
@@ -94,7 +95,7 @@ package twit
 			
 			twitterGet(url, vars, listener);
 		}
-		public function loginComplete(event:Event) {
+		public function loginComplete(event:Event):void {
 			try {
 				var loader:URLLoader = URLLoader(event.target);
 				var xml:XML = new XML(loader.data);
@@ -466,7 +467,7 @@ package twit
 				var xml:XML = new XML(loader.data);
 				
 				loader.removeEventListener(Event.COMPLETE, getUserComplete);
-				this.listenerGetUser(true, new User(new XML(xml)));
+				this.listenerGetUser(true, new UserFull(new XML(xml)));
 			}
 			catch (e:Error)
 			{
