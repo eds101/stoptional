@@ -97,7 +97,13 @@
 					item.addEventListener(MouseEvent.MOUSE_MOVE, this.mouseMoveVertical);
 					
 					item.horizontalScrollPolicy = ScrollPolicy.OFF;
-				}							
+				}
+				
+				//var t = new TwitterAPI(this.username.text, this.password.text);
+				//t.getDirectMsg(getDirectMsgListener);
+				//t.getSentMsg(getSentMsgListener);
+				//t.sendDirectMsg("mkb2014", "What are you doing now?", sendDirectMsgListener);
+				//t.destroyDirectMsg("44154900", destroyDirectMsgListener);
 			}
 			
 			private function tabChange(event:ItemClickEvent) {
@@ -308,6 +314,26 @@
 			}
 			
 			private function getUserListener(success:Boolean, xml:XML):void {
+				Alert.show("success: " + success);
+				Alert.show(xml.toString());
+			}
+
+			private function getDirectMsgListener(success:Boolean, xml:XML):void {
+				Alert.show("success: " + success);
+				Alert.show(xml.toString());
+			}
+			
+			private function getSentMsgListener(success:Boolean, xml:XML):void {
+				Alert.show("success: " + success);
+				Alert.show(xml.toString());
+			}
+			
+			private function sendDirectMsgListener(success:Boolean, xml:XML):void {
+				Alert.show("success: " + success);
+				Alert.show(xml.toString());
+			}
+			
+			private function destroyDirectMsgListener(success:Boolean, xml:XML):void {
 				Alert.show("success: " + success);
 				Alert.show(xml.toString());
 			}
