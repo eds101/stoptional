@@ -1,62 +1,88 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:WindowedApplication xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute">
-	<mx:Canvas id="boxUserInfo"
-		autoLayout="true"
-		height="100" width="100%"
-		>
-		<mx:Image id="imgIcon" />
-		<mx:Text id="txtScreenName"
-			x="55"
-			/>
-		<mx:Text id="txtName"
-			x="55" y="17"
-			/>
-		<mx:Text id="txtLocation"
-			x="55" y="33"
-			/>
-		<mx:Text id="txtDescription"
-			x="0" y="50"
-			/>
+<mx:WindowedApplication xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute"
+	creationComplete="load()"
+	>
+	<mx:Canvas id="container" height="100%" width="100%">
 		
-		<mx:Text id="txtFollowers" />	
-	</mx:Canvas>
-	
-	<mx:Canvas id="toolbar" y="75" height="25" width="100%" autoLayout="true" visible="true">
+		<mx:Canvas id="boxUserInfo"
+			autoLayout="true"
+			height="100" width="100%"
+			>
+			<mx:Image id="imgIcon" />
+			<mx:Text id="txtScreenName"
+				x="55"
+				/>
+			<mx:Text id="txtName"
+				x="55" y="17"
+				/>
+			<mx:Text id="txtLocation"
+				x="55" y="33"
+				/>
+			<mx:Text id="txtDescription"
+				x="0" y="50"
+				/>
 			
-		<mx:TextInput id="username"
-			width="100"
-			text="user"
-			/>
-		<mx:TextInput id="password"
-			width="100" x="100"
-			text="password"
-			displayAsPassword="true"
-			/>
-		<mx:Button id="btnLogin" label="Login"
-			x="200" width="100"
-			click="login()"
-			/>
+			<mx:Text id="txtFollowers" />	
+		</mx:Canvas>
 		
-		<mx:Button id="btnUploadPhoto" label="Upload Photo"
-			x="300" width="100"
-			click="uploadPhoto()"
-			/>
-		<mx:Button id="btnUpdateUserTimeline" label="Update User Timeline"
-			x="400" width="100"
-			click="updateUserTimeline()"
-			/>
+		<mx:Canvas id="toolbar" y="75" height="25" width="100%" autoLayout="true" visible="true">
+				
+			<mx:TextInput id="username"
+				width="100"
+				text="user"
+				/>
+			<mx:TextInput id="password"
+				width="100" x="100"
+				text="password"
+				displayAsPassword="true"
+				/>
+			<mx:Button id="btnLogin" label="Login"
+				x="200" width="100"
+				click="login()"
+				/>
+			
+			<mx:Button id="btnUploadPhoto" label="Upload Photo"
+				x="300" width="100"
+				click="uploadPhoto()"
+				/>
+			<mx:Button id="btnUpdateUserTimeline" label="Update User Timeline"
+				x="400" width="100"
+				click="updateUserTimeline()"
+				/>
+			
+		</mx:Canvas>
 			
 		<mx:Button id="btnLoad" label="Load"
 			x="500" y="0" width="100"
 			click= "load()"
 			/>
 		
+		
+		<mx:TabNavigator id="canvas" width="100%" y="100">
+				
+			<mx:VBox id="cnvSettings" label="Login/Settings"
+				height="100%" width="100%" autoLayout="true" />
+			<mx:VBox id="cnvPublicTimeline" label="Public Timeline"
+				height="100%" width="100%" autoLayout="true" />
+			<mx:VBox id="cnvFriendsTimeline" label="Friends Timeline"
+				height="100%" width="100%" autoLayout="true" />
+			<mx:VBox id="cnvUserTimeline" label="User Timeline"
+				height="100%" width="100%" autoLayout="true" />
+			<mx:VBox id="cnvPrivateMessages" label="Private Message"
+				height="100%" width="100%" autoLayout="true" />
+			<mx:VBox id="cnvArchive" label="Archive"
+				height="100%" width="100%" autoLayout="true" />
+				
+		</mx:TabNavigator>
 	</mx:Canvas>
-	<mx:Tile id="canvas" width="100%" height="100%" y="100" autoLayout="true" />
-	
-	
+			
 	<mx:Script>
 		<![CDATA[
+			import mx.events.ItemClickEvent;
+			import mx.events.ResizeEvent;
+			import twit.Group;
+			import twit.Settings;
+			import twit.UserFull;
 			import twit.User;
 			import twit.Status;
 			import twit.Twit;
@@ -64,37 +90,56 @@
 			import twit.TwitterAPI
 			import mx.controls.Alert;
 			
-			var twitpic:TwitPicAPI = null;
-			var twitter:TwitterAPI = null;
+			private var twitpic:TwitPicAPI = null;
+			private var twitter:TwitterAPI = null;
 			
-			var user:User = null;
+			private var user:User = null;
+			private var openGroup:Object = new Object();
 			
-			public function load():void {
-				var tp:TwitPicAPI;
-				var t:TwitterAPI;
-				 
-				tp = new TwitPicAPI(username.text, password.text);
+			public function load():void {			
+				container.addEventListener(ResizeEvent.RESIZE, this.resize);
+				for each (var item:VBox in canvas.getChildren()) {
+					item.addEventListener(MouseEvent.MOUSE_MOVE, this.mouseMoveVertical);
+				}			
+			}
+			/*
+			private function tabChange(event:ItemClickEvent) {
+				this.canvas.selectedIndex = event.index;
 				
-				//tp.upload(twitPicListener);
+			}
+			*/
+			private function mouseMoveVertical(event:MouseEvent) {
+				var container = (event.currentTarget);
+				if (!event.buttonDown && (event.ctrlKey || event.controlKey) && container.getChildren().length > 0) {
+					var y:int = event.stageY;
+					var c:DisplayObject = container.getChildAt(container.getChildren().length - 1);
+					var	w:int = c.y + c.height;
+					
+					y -= container.y;
+					
+					container.verticalScrollPosition = (w - container.height) * (y / container.height);
+					//event.stopPropagation();
+				} 
+			}
+			
+			private function resize(event:ResizeEvent):void {
+				//this.container.width = this.width - 24;
+				//this.container.height = this.height - 24;
 				
-				t = new TwitterAPI(username.text, password.text);
-				//t.getPublicTimeline(getTimelineListener);
-				//t.getFriendsTimeline(10,getTimelineListener);
-				//t.getUserTimeline("hh2360", 10, getTimelineListener);
-				//t.updateStatus("I am doing my project now.", updateStatusListener);
-				//t.getStatus("1041108468", getStatusListener);
-				//t.deleteStatus("1041108468", getStatusListener);
-				//t.updateLocation("New York", updateLocationListener);
-				//t.getRateLimit(getRateLimitListener);
-				//t.getFriends("hh2360", getFriendsListener);
-				//t.getFollowers("hh2360", getFollowersListener);
-				//t.getUsers("", "keenhenry1109@gmail.com", getUsersListener);
+				//this.tabbar.width = this.container.width;
+				this.canvas.width = this.container.width;
+				this.canvas.height = this.container.height - 100;
 				//t.getDirectMsg(getDirectMsgListener);
 				//t.getSentMsg(getSentMsgListener);
 				//t.sentDirectMsg("mkb2014", "What are you doing now?", getSentDirectMsgListener);
 				//t.destroyDirectMsg("44154900", getDestroyMsgListener);
 				
-				return;
+				for each(var tab in this.canvas.getChildren()) {
+					tab.width = this.canvas.width;
+					for each (var item in tab) {
+						item.width = this.canvas.width - 24;
+					}
+				}
 			}
 			
 			private function login():void {
@@ -121,12 +166,12 @@
 			
 			private function updateUserTimeline():void {
 				if (this.twitter != null)
-					this.twitter.getUserTimeline(this.user.id, 30, this.getTimelineListener);
+					this.twitter.getUserTimeline(this.user.id, 30, this.getUserTimelineListener);
 				else
 					Alert.show("You must be logged in to update the timeline.");					
 			}
 			
-			private function genericListener(success:Boolean, xml:XML) {
+			private function genericListener(success:Boolean, xml:XML):void {
 				Alert.show("genericListener>\nsuccess: " + success);
 				Alert.show(xml.toString());
 			}
@@ -135,7 +180,7 @@
 				Alert.show("loginListener>\nsuccess: " + success);
 				Alert.show("logged in: " + authenticated);
 				
-				if (!success || authenticated == null) {
+				if (!success) {
 					Alert.show("Login failed:\n\nError sending request to server.  Please try again.");
 					
 					this.twitpic = null;
@@ -158,7 +203,7 @@
 				Alert.show("logoutListener>\nsuccess: " + success);
 				Alert.show("logged out: " + loggedout);
 				
-				if (!success || loggedout == null) {
+				if (!success) {
 					Alert.show("Logout failed:\n\nError sending request to server.  Please try again.");
 					
 					//this.twitpic = null;
@@ -175,7 +220,7 @@
 				}
 			}
 			
-			private function loadUserListener(success:Boolean, user:User):void {
+			private function loadUserListener(success:Boolean, user:UserFull):void {
 				Alert.show("loadUserListener>\n" + success);
 				if (!success) {
 					//no need for alert
@@ -186,20 +231,55 @@
 				}
 				
 				if (this.user != null) {
+					twit.Settings.setTextcolor("#" + user.profile_text_color);
+					twit.Settings.setBackcolor("#" + user.profile_background_color);
+					twit.Settings.setLinkcolor("#" + user.profile_link_color);
+					twit.Settings.setFillcolor("#" + user.profile_sidebar_fill_color);
+					twit.Settings.setBordercolor("#" + user.profile_sidebar_border_color);
+										
+					this.setStyle("backgroundColor", "#" + user.profile_background_color);
+					
 					this.imgIcon.source = user.profile_image_url;
 					this.txtScreenName.text = user.screen_name;
 					this.txtName.text = user.name;
 					this.txtLocation.text = user.location;
 					this.txtDescription.text = user.description;
 					this.txtFollowers.text = "" + user.followers_count;
+					
+					this.txtScreenName.setStyle("color", "#" + user.profile_text_color);
+					this.txtName.setStyle("color", "#" + user.profile_text_color);
+					this.txtLocation.setStyle("color", "#" + user.profile_text_color);
+					this.txtDescription.setStyle("color", "#" + user.profile_text_color);
+					this.txtFollowers.setStyle("color", "#" + user.profile_text_color);
 				}
 			}
 			
-			private function getTimelineListener(success:Boolean, statuses:Array):void {
-				Alert.show("getTimelineListener>\nsuccess: " + success);
+			private function getUserTimelineListener(success:Boolean, statuses:Array):void {
+				Alert.show("getUserTimelineListener>\nsuccess: " + success);
 				if (success && statuses != null) {
 					for(var i:int = 0; i < statuses.length; i++) {
-						this.canvas.addChild(new Twit(new Status(new XML(statuses[i]))));
+						var s:Status = new Status(new XML(statuses[i]));
+						var t:Twit = new Twit(s);
+						var u:String = s.user.screen_name;
+						
+						if (t.text.substr(0, 7) == "[group]")
+						{
+							this.openGroup[u] = new Group(t.text.substr(7));
+						}
+						else if (t.text.substr(0, 8) == "[/group]" && this.openGroup[u] != null)
+						{
+							this.cnvUserTimeline.addChild(this.openGroup[u]);
+							this.openGroup[u].width = this.canvas.width;
+							this.openGroup[u] = null;
+						}
+						else if (this.openGroup[u] != null)
+						{
+							this.openGroup[u].addTwit(t);
+						}
+						else
+						{
+							this.cnvUserTimeline.addChild(t);
+						}
 					}
 				} else {
 					Alert.show("Error getting timeline.");
