@@ -180,7 +180,7 @@ package twit
 			}
 		}		
 		
-		public function getPublicTimeline(listenerPublicTimeline:Function):void {
+		public function getPublicTimeline(id:String, count:int, since_id:String, listenerPublicTimeline:Function):void {
 			this.listenerPublicTimeline = listenerPublicTimeline;
 			
 			var url:String = "http://twitter.com/statuses/public_timeline.xml";
@@ -212,12 +212,13 @@ package twit
 			}
 		}
 		
-		public function getFriendsTimeline (count:int, listenerFriendsTimeline:Function):void {
+		public function getFriendsTimeline (id:String, count:int, since_id:String, listenerFriendsTimeline:Function):void {
 			this.listenerFriendsTimeline = listenerFriendsTimeline;
 			
 			var url:String = "http://twitter.com/statuses/friends_timeline.xml";
 			var vars:URLVariables = new URLVariables();
 			vars.count = count;
+			if (since_id != "") vars.since_id = since_id;
 			 
 			var listener:Function = getFriendsTimelineComplete;
 			
@@ -246,13 +247,14 @@ package twit
 			}
 		}
 		
-		public function getUserTimeline (id:String, count:int, listenerUserTimeline:Function):void {
+		public function getUserTimeline (id:String, count:int, since_id:String, listenerUserTimeline:Function):void {
 			this.listenerUserTimeline = listenerUserTimeline;
 			
 			var url:String = "http://twitter.com/statuses/user_timeline.xml";
 			var vars:URLVariables = new URLVariables();
 			vars.id = id;
 			vars.count = count;
+			if (since_id != "") vars.since_id = since_id;
 			
 			var listener:Function = getUserTimelineComplete;
 			
@@ -492,24 +494,32 @@ package twit
 				var xml:XML = new XML(loader.data);
 				
 				loader.removeEventListener(Event.COMPLETE, getDirectMsgComplete);
-				this.listenerGetDirectMsg(true, xml);
+				
+				var statuses:Array = new Array();
+				var list:XMLList = XMLList(xml.child("direct_message"));
+				
+				for (var i:int = 0; i < list.length(); i++) {
+					statuses.push(new XML(list[i]));
+				}
+				
+				this.listenerGetDirectMsg(true, statuses);
 			}
 			catch (e:Error)
 			{
+				Alert.show(e.toString());
 				this.listenerGetDirectMsg(false, null);
 			}
 		}
 		
 		
 		public function getSentMsg(listenerGetSentMsg:Function):void{
-		   this.listenerGetSentMsg = listenerGetSentMsg;			
-		   
-           var url:String = "http://twitter.com/direct_messages/sent.xml";
-           var vars:URLVariables = new URLVariables();
-		   
-		   var listener:Function = getSentMsgComplete;
-			
-		   twitterGet(url, vars, listener);
+			this.listenerGetSentMsg = listenerGetSentMsg;			
+   
+			var url:String = "http://twitter.com/direct_messages/sent.xml";
+			var vars:URLVariables = new URLVariables();
+			   
+			var listener:Function = getSentMsgComplete;
+			twitterGet(url, vars, listener);
 		}	
 		public function getSentMsgComplete(event:Event):void{
 		   try {
@@ -517,7 +527,16 @@ package twit
 				var xml:XML = new XML(loader.data);
 				
 				loader.removeEventListener(Event.COMPLETE, getSentMsgComplete);
-				this.listenerGetSentMsg(true, xml);
+				
+				var msgs:Array = new Array();
+				var list:XMLList = xml.direct_message;
+				
+				for (var i:int = 0; i < list.length(); i++) {
+				
+					msgs.push(new XML(list[i]));
+				}
+				
+				this.listenerGetSentMsg(true, msgs);
 			}
 			catch (e:Error)
 			{
