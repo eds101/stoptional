@@ -46,6 +46,8 @@
 					</mx:GridItem>
 					<mx:GridItem>
 						<mx:Text id="txtLocation" />
+						<mx:TextInput id="changeLocation">
+						</mx:TextInput>
 					</mx:GridItem>
 					<mx:GridItem>
 						<mx:Text id="txtUrl" />
@@ -320,6 +322,9 @@
 				this.attachedPhotos.verticalScrollPolicy = ScrollPolicy.OFF;
 				this.attachedPhotos.addEventListener(MouseEvent.MOUSE_MOVE, this.mouseMoveHorizontal);
 				this.filterBox.addEventListener(MouseEvent.MOUSE_MOVE, this.mouseMoveHorizontal);
+				this.changeLocation.addEventListener(FocusEvent.FOCUS_OUT, this.updateLocationTxt);
+				this.txtLocation.addEventListener(MouseEvent.CLICK, this.editLocation);
+				this.changeLocation.setVisible(false);
 				
 				//var t = new TwitterAPI(this.username.text, this.password.text);
 				//t.getDirectMsg(getDirectMsgListener);
@@ -328,6 +333,21 @@
 				//t.destroyDirectMsg("44154900", destroyDirectMsgListener);
 				
 				this.resize();
+			}
+			
+			
+			
+			private function editLocation(event:MouseEvent) {
+				this.txtLocation.setVisible(false);
+				this.changeLocation.setVisible(true);
+				this.changeLocation.setFocus();
+			}
+			
+			private function updateLocationTxt(event:FocusEvent) {
+				this.changeLocation.setVisible(false);
+				this.txtLocation.setVisible(true);
+				twitter.updateLocation(changeLocation.text,this.updateLocationListener);
+				
 			}
 			
 			private function mouseMoveVertical(event:MouseEvent) {
@@ -441,7 +461,7 @@
 						case 5:
 							this.cnvPrivateMessages.removeAllChildren();
 							this.twitter.getDirectMsg(this.getDirectMsgListener);
-	//						this.twitter.getSentMsg(this.getSentMsgListener);
+							//this.twitter.getSentMsg(this.getSentMsgListener);
 						break;
 					}
 				}
@@ -811,8 +831,12 @@
 			}
 			
 			private function updateLocationListener(success:Boolean, xml:XML):void {
-				Alert.show("success: " + success);
-				Alert.show(xml.toString());
+				if (!success) {
+					Alert.show("Failed to change location on twitter.");
+					
+				} else {
+					this.txtLocation.text = this.changeLocation.text;
+				}
 			}
 			
 			private function getRateLimitListener(success:Boolean, rate:int):void {
