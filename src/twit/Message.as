@@ -34,7 +34,7 @@ package twit
 			
 			this.setStyle("backgroundColor", Settings.getBackcolor());
 			
-			this.menu.setLabels(["One", "Two", "Three", "Four", "Five", "Six", "Seven"]);
+			this.menu.setLabels(["Delete", "More Info", "Archive", "Enlarge"]);
 			this.menu.setMenuSelectionListener(menuSelectionListener);
 			this.menu.visible = false;
 			
@@ -116,7 +116,17 @@ package twit
 		}
 		
 		private function menuSelectionListener(selection:int, label:String):void {
-			mx.controls.Alert.show("" + selection + ": " + label);
+			switch(label) {
+				case "Archive":
+					this.archive();
+				break;
+				
+				case "Delete":
+					this.parent.removeChild(this);
+				break;
+				
+				
+			}
 		}
 		
 		public function resizeHeight(event:ResizeEvent) {
