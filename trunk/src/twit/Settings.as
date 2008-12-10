@@ -132,7 +132,6 @@ package twit
 			
 			fs.open(ARCHIVE_XML_FILE, FileMode.APPEND);
 			for each (var item:XML in statuses) {
-				Alert.show(item.toXMLString());
 				fs.writeUTFBytes(item.toXMLString());
 				if(item.child("text").toString().substr(0,7) == "[photo]") {
 					for each (var url:String in item.child("text").toString().substr(7).split(' ')) {

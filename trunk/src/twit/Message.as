@@ -28,13 +28,17 @@ package twit
 		private var imageContainer:HBox = new HBox();
 		private var keywordContainer:HBox = new HBox();
 		
-		public function Message(status:Status):void
-		{
-			var user:User = status.user;
-			
+		public const STATUS_MESSAGE:int = 0;
+		public const PRIVATE_MESSAGE:int = 1;
+		
+		private var msgType:int;
+		
+		public var author:String = "";
+		
+		public function Message():void {
 			this.setStyle("backgroundColor", Settings.getBackcolor());
 			
-			this.menu.setLabels(["Delete", "More Info", "Archive", "Enlarge"]);
+			//this.menu.setLabels(["Delete", "More Info", "Archive", "Enlarge"]);
 			this.menu.setMenuSelectionListener(menuSelectionListener);
 			this.menu.visible = false;
 			
@@ -42,26 +46,6 @@ package twit
 			this.box.addChild(this.keywordContainer);
 			this.box.addChild(this.imageContainer);
 			this.box.addChild(this.textContainer);
-			
-			var img:Image = new Image();
-			img.source = user.profile_image_url;
-			this.infoContainer.addChild(img);
-			
-			var lbl:Label = new Label();
-			lbl.text = user.screen_name;
-			this.infoContainer.addChild(lbl);
-			
-			lbl = new Label();
-			lbl.text = user.name;
-			this.infoContainer.addChild(lbl);
-			
-			lbl = new Label();
-			lbl.text = user.location;
-			this.infoContainer.addChild(lbl);
-			
-			lbl = new Label();
-			lbl.text = status.created_at;
-			this.infoContainer.addChild(lbl);
 			
 			this.addChild(this.menu);
 			this.addChild(this.box);
@@ -94,12 +78,130 @@ package twit
 			this.addEventListener(MouseEvent.RIGHT_MOUSE_UP, this.markEnd);				
 		}
 		
+		public function setStatus(s:Status) {
+			var user:User = s.user;
+			this.author = user.screen_name;
+			
+			var img:Image = new Image();
+			img.source = user.profile_image_url;
+			this.infoContainer.addChild(img);
+			
+			var lbl:Label = new Label();
+			lbl.text = this.author;
+			this.infoContainer.addChild(lbl);
+			this.infoContainer.horizontalScrollPolicy = ScrollPolicy.OFF;
+			this.infoContainer.verticalScrollPolicy = ScrollPolicy.OFF;
+			
+			lbl = new Label();
+			lbl.text = user.name;
+			this.infoContainer.addChild(lbl);
+			
+			lbl = new Label();
+			lbl.text = user.location;
+			this.infoContainer.addChild(lbl);
+			
+			lbl = new Label();
+			lbl.text = s.created_at;
+			this.infoContainer.addChild(lbl);
+		}
+		
+		public function setDirect(d:Direct) {
+			var user:User = d.sender;
+			this.author = user.screen_name;
+			
+			var img:Image = new Image();
+			img.source = user.profile_image_url;
+			this.infoContainer.addChild(img);
+			
+			var lbl:Label = new Label();
+			lbl.text = this.author;
+			this.infoContainer.addChild(lbl);
+			this.infoContainer.horizontalScrollPolicy = ScrollPolicy.OFF;
+			this.infoContainer.verticalScrollPolicy = ScrollPolicy.OFF;
+			
+			lbl = new Label();
+			lbl.text = user.name;
+			this.infoContainer.addChild(lbl);
+			
+			lbl = new Label();
+			lbl.text = user.location;
+			this.infoContainer.addChild(lbl);
+			
+			lbl = new Label();
+			lbl.text = d.created_at;
+			this.infoContainer.addChild(lbl);
+		}
+		
+		public function hasKeyword(key:String):Boolean {
+			return (this.keywords.indexOf(key.toLowerCase()) >= 0)
+		}
+		public function getPhotos():Array {
+			return this.images;
+		}
+		
+		public function setMsgType(type:int):void {
+			this.msgType = type;
+			switch(type) {
+			
+				case this.STATUS_MESSAGE:
+					this.menu.setLabels(["Delete", "More Info", "Archive", "Enlarge"]);
+					
+				break;
+			
+				case this.PRIVATE_MESSAGE:
+					this.menu.setLabels(["Delete", "More Info", "Archive", "Enlarge"]);
+					
+				break;
+			
+			}
+		}
+		
 		public function addXML(xml:XML) {
 			this.xmls.push(xml);
 		}
 		
 		public function getXMLs():Array {
 			return this.xmls;
+		}
+		
+		public function addStatus(s:Status) {
+			var txt:String = s.text;
+			var t:Twit;
+			if (txt.substr(0, 7) == "[photo]") {
+				for each (var src:String in txt.substr(7).split(" ")) {
+					if (src.length > 0) {
+						t = new Twit();
+						t.setImage(src);
+						this.addTwit(t);
+					}
+				}
+			}
+			else
+			{
+				t = new Twit();
+				t.setText(txt);
+				this.addTwit(t);
+			}
+		}
+		
+		public function addDirect(d:Direct) {
+			var txt:String = d.text;
+			var t:Twit;
+			if (txt.substr(0, 7) == "[photo]") {
+				for each (var src:String in txt.substr(7).split(" ")) {
+					if (src.length > 0) {
+						t = new Twit();
+						t.setImage(src);
+						this.addTwit(t);
+					}
+				}
+			}
+			else
+			{
+				t = new Twit();
+				t.setText(txt);
+				this.addTwit(t);
+			}
 		}
 		
 		public function archive() {
@@ -170,7 +272,7 @@ package twit
 				
 			} else if (item.text.substr(0, 5) == "[key]") {
 				for each (var key:String in item.text.substr(5).split(" ")) {
-					this.keywords.push(key);
+					this.keywords.push(key.toLowerCase());
 					this.keywordContainer.addChild(newText(key));
 				}
 					

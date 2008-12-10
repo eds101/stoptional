@@ -14,6 +14,9 @@ package twit
 		public var thumbUrl:String = "";
 		public var fullUrl:String = "";
 		
+		private var txt:Text;
+		private var img:Image;
+		
 		public function Twit()
 		{
 			this.autoLayout = true;
@@ -32,19 +35,22 @@ package twit
 		}
 		
 		public function setImage(url:String):void {
+			var regex:RegExp = new RegExp;
+			regex = /%20/g;
+			url = url.replace(regex, " ");
+			
 			this.imageUrl = url;
 			this.thumbUrl = url.replace("twitpic.com/", "twitpic.com/show/thumb/");
 			this.thumbUrl = thumbUrl.replace(".jpg", "_thumb.jpg");
 			this.fullUrl = url.replace("twitpic.com/", "twitpic.com/show/full/");
-			
-			
-			var img:Image = new Image();
+								
+			img = new Image();
 			img.source = this.thumbUrl;
 			img.width = 150;
 			img.height = 150;
 			this.addChild(img);
 			
-			var txt:Text = new Text();
+			txt = new Text();
 			txt.text = this.imageUrl;
 			txt.setStyle("color", Settings.getLinkcolor());
 			this.addChild(txt);
@@ -53,15 +59,17 @@ package twit
 		public function setText(text:String) {
 			this.text = text;
 				
-			var txta:Text = new Text();
-			txta.setStyle("color", Settings.getTextcolor());
-			txta.text = this.text;
-			txta.height = 16;						
-			this.addChild(txta);
+			txt = new Text();
+			txt.setStyle("color", Settings.getTextcolor());
+			txt.text = this.text;
+			
+			//txt.height = 20;
+			this.addChild(txt);
 		}
 		
 		private function resize(event:ResizeEvent) {
-			this.height = 0;
+			this.height = 20;
+			
 			for each (var item:DisplayObject in this.getChildren()) {
 				item.width = this.width;
 				if (item.height > this.height) this.height = item.height;
