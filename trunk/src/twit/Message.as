@@ -12,6 +12,7 @@ package twit
 	import mx.controls.Text;
 	import mx.core.ScrollPolicy;
 	import mx.events.ResizeEvent;
+	import mx.formatters.DateFormatter;
 	
 	public class Message extends Canvas
 	{
@@ -30,10 +31,12 @@ package twit
 		
 		public const STATUS_MESSAGE:int = 0;
 		public const PRIVATE_MESSAGE:int = 1;
+		public const ARCHIVED_MESSAGE:int = 2;
 		
 		private var msgType:int;
 		
 		public var author:String = "";
+		public var timestamp:Date = new Date();
 		
 		public function Message():void {
 			this.setStyle("backgroundColor", Settings.getBackcolor());
@@ -101,8 +104,13 @@ package twit
 			this.infoContainer.addChild(lbl);
 			
 			lbl = new Label();
-			lbl.text = s.created_at;
+			var df:DateFormatter = new DateFormatter();
+			df.formatString = "MMMM D, YYYY, J:NN:SS";
+			lbl.text = df.format(s.created_at);
 			this.infoContainer.addChild(lbl);
+			
+			
+			this.timestamp = new Date(s.created_at);
 		}
 		
 		public function setDirect(d:Direct) {
@@ -128,8 +136,15 @@ package twit
 			this.infoContainer.addChild(lbl);
 			
 			lbl = new Label();
-			lbl.text = d.created_at;
+			var df:DateFormatter = new DateFormatter();
+			df.formatString = "MMMM D, YYYY, J:NN:SS";
+			
+			lbl.text = df.format(d.created_at);
 			this.infoContainer.addChild(lbl);
+			
+//			df.formatString = "mm:dd:yyyy hh:nn:ss";
+	//		this.timestamp = new Date(df.format(d.created_at));
+			this.timestamp = new Date(d.created_at);			
 		}
 		
 		public function hasKeyword(key:String):Boolean {
@@ -150,6 +165,11 @@ package twit
 			
 				case this.PRIVATE_MESSAGE:
 					this.menu.setLabels(["Delete", "More Info", "Archive", "Enlarge"]);
+					
+				break;
+				
+				case this.ARCHIVED_MESSAGE:
+					this.menu.setLabels(["Delete from Archive", "More Info", "", "Enlarge"]);
 					
 				break;
 			
