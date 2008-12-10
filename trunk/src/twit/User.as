@@ -1,9 +1,8 @@
 package twit
 {
-	import mx.controls.Alert;
-
 	public class User
 	{
+		private var xml:XML;
 		public var id:String;
 		public var name:String; 
 		public var screen_name:String;
@@ -15,6 +14,7 @@ package twit
 				
 		public function User(xml:XML)
 		{
+			this.xml = xml;
 			this.id = xml.child("id");
 			this.name = xml.child("name");
 			this.screen_name = xml.child("screen_name");

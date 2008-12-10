@@ -2,6 +2,7 @@ package twit
 {
 	public class Status
 	{
+		private var xml:XML;
 		public var created_at:String;
 		public var id:String;
 		public var text:String;
@@ -14,6 +15,7 @@ package twit
 		
 		public function Status(xml:XML)
 		{
+			this.xml = xml;
 			this.created_at = xml.child("created_at");
 			this.id = xml.child("id");
 			this.text = xml.child("text");

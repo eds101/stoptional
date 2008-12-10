@@ -16,6 +16,8 @@ package twit
 		public var statuses_count:int;
 		public var following:Boolean;
 		
+		public var url:String;
+		
 		public var profile_background_color:String;
 		public var profile_text_color:String;
 		public var profile_link_color:String;
@@ -29,6 +31,8 @@ package twit
 			this.friends_count = parseInt(xml.child("friends_count"));
 			this.statuses_count = parseInt(xml.child("statuses_count"));
 			this.following = (xml.child("following") == "true")
+			
+			this.url = xml.child("url");
 			
 			this.profile_background_color = (xml.child("profile_background_color"));
 			this.profile_text_color = (xml.child("profile_text_color"));
