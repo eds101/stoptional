@@ -5,7 +5,6 @@ package twit
 	import flash.net.URLRequest;
 	import flash.net.URLStream;
 	import flash.utils.ByteArray;
-	import mx.controls.Alert;
 	
 	public class Settings
 	{
@@ -16,12 +15,24 @@ package twit
 		private static var bordercolor:String;
 		private static var archiveDir:File = File.applicationStorageDirectory;
 		private static var numItemsPerPage:int;
-		public static const ARCHIVE_XML_FILE:File = File.applicationStorageDirectory.resolvePath("archive.xml");
 		
+		private static var user:UserFull;
+		
+		public static const ARCHIVE_XML_FILE:File = File.applicationStorageDirectory.resolvePath("archive.xml");
 		private static const DEFAULT_NUM_ITEMS_PER_PAGE = 50;
+		
+		
 		
 		public function Settings()
 		{
+		}
+		
+		public static function setUser(u:UserFull) {
+			user = u;
+		}
+		
+		public static function getUser():UserFull {
+			return user;
 		}
 		
 		public static function getSettingsFromFile():void {
