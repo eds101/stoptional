@@ -34,6 +34,7 @@ package twit
 			{
 				this.imageUrl = status.text.substr(7);
 				this.thumbUrl = imageUrl.replace("twitpic.com/", "twitpic.com/show/thumb/");
+				this.thumbUrl = imageUrl.replace(".jpg", "_thumb.jpg");
 				this.fullUrl = imageUrl.replace("twitpic.com/", "twitpic.com/show/full/");
 				
 				var img:Image = new Image();

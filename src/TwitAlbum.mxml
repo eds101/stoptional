@@ -91,7 +91,9 @@
 			private var user:User = null;
 			private var openGroup:Object = new Object();
 			
-			public function load():void {			
+			public function load():void {
+				Settings.getSettingsFromFile();		//load settings from file
+				loadArchive();
 				container.addEventListener(ResizeEvent.RESIZE, this.resize);
 				for each (var item:VBox in canvas.getChildren()) {
 					item.addEventListener(MouseEvent.MOUSE_MOVE, this.mouseMoveVertical);
@@ -232,7 +234,7 @@
 					
 				}
 				
-				if (this.user != null) {
+				if (athis.user != null) {
 					twit.Settings.setTextcolor("#" + user.profile_text_color);
 					twit.Settings.setBackcolor("#" + user.profile_background_color);
 					twit.Settings.setLinkcolor("#" + user.profile_link_color);
@@ -261,6 +263,23 @@
 				if (success && statuses != null) {
 					for(var i:int = 0; i < statuses.length; i++) {
 						var s:Status = new Status(new XML(statuses[i]));
+						if(s.text.substr(0,7)== "[photo]") {
+							var purls:Array = s.text.substr(7).split(' ');
+							for each (var purl:String in purls) {
+								s.text = "[photo]" + purl;
+								addStatus(s);
+							}
+						} else {
+							addStatus(s);
+						}
+					}
+				} else {
+					Alert.show("Error getting timeline.");
+				}
+			}
+			
+			private function addStatus(s:Status) {
+				
 						var t:Twit = new Twit(s);
 						var u:String = s.user.screen_name;
 						
@@ -282,10 +301,25 @@
 						{
 							this.cnvUserTimeline.addChild(t);
 						}
-					}
-				} else {
-					Alert.show("Error getting timeline.");
-				}
+			}
+			
+			private function loadArchive():void {
+				var fs:FileStream = new FileStream();
+				fs.open(Settings.ARCHIVE_XML_FILE, FileMode.READ);
+				var statList:XMLList = XML(fs.readUTFBytes(fs.bytesAvailable)).status;
+				fs.close();
+				for (var i:int = 0; i < statList.length(); i++) {
+					var s:Status = new Status(new XML(statList[i]));
+					if(s.text.substr(0,7)== "[photo]") {
+						var purls:Array = s.text.substr(7).split(' ');
+						for each (var purl:String in purls) {
+							purl = purl.replace("http://twitpic.com/",Settings.ARCHIVE_XML_FILE.nativePath).concat(".jpg");
+							s.text = "[photo]" + purl;
+						}
+					} else {
+							addStatus(s);
+					}				
+				}			
 			}
 			
 			private function updateStatusListener(success:Boolean, xml:XML):void {
