@@ -91,11 +91,19 @@ package twit
 			this.addEventListener(ResizeEvent.RESIZE, this.resizeWidth);
 			
 			this.addEventListener(MouseEvent.RIGHT_MOUSE_DOWN, this.markBegin);
-			this.addEventListener(MouseEvent.RIGHT_MOUSE_UP, this.markEnd);	
+			this.addEventListener(MouseEvent.RIGHT_MOUSE_UP, this.markEnd);				
 		}
 		
 		public function addXML(xml:XML) {
 			this.xmls.push(xml);
+		}
+		
+		public function getXMLs():Array {
+			return this.xmls;
+		}
+		
+		public function archive() {
+			Settings.archive(this.xmls);
 		}
 		
 		private function markBegin(event:MouseEvent):void {

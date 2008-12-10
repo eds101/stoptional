@@ -2,7 +2,7 @@ package twit
 {
 	public class Status
 	{
-		private var xml:XML;
+		public var xml:XML;
 		public var created_at:String;
 		public var id:String;
 		public var text:String;
