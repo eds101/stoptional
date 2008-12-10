@@ -61,7 +61,7 @@
 			<mx:VBox id="cnvSettings" label="Login/Settings"
 				height="100%" width="100%" autoLayout="true"
 				>
-				<mx:Canvas id="toolbar" y="75" height="25" width="100%" autoLayout="true" visible="true">
+				<mx:Canvas id="toolbar" y="75" height="50" width="100%" autoLayout="true" visible="true">
 				
 					<mx:TextInput id="username"
 						width="100"
@@ -169,6 +169,8 @@
 				//t.getSentMsg(getSentMsgListener);
 				//t.sendDirectMsg("mkb2014", "What are you doing now?", sendDirectMsgListener);
 				//t.destroyDirectMsg("44154900", destroyDirectMsgListener);
+				
+				this.resize(new ResizeEvent(ResizeEvent.RESIZE));
 			}
 			
 			private function mouseMoveVertical(event:MouseEvent) {
