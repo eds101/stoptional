@@ -2,11 +2,13 @@ package twit
 {
 	import flash.display.DisplayObject;
 	import flash.events.MouseEvent;
+	import flash.filesystem.FileStream;
 	
 	import mx.containers.Box;
 	import mx.containers.Canvas;
 	import mx.containers.Grid;
 	import mx.containers.HBox;
+	import mx.containers.VBox;
 	import mx.controls.Image;
 	import mx.controls.Label;
 	import mx.controls.Text;
@@ -169,7 +171,7 @@ package twit
 				break;
 				
 				case this.ARCHIVED_MESSAGE:
-					this.menu.setLabels(["Delete from Archive", "More Info", "", "Enlarge"]);
+					this.menu.setLabels(["Delete from Archive", "More Info", "Enlarge"]);
 					
 				break;
 			
@@ -228,6 +230,21 @@ package twit
 			Settings.archive(this.xmls);
 		}
 		
+		public function deleteFromArchive() {
+			var cnvArchive:VBox = VBox(this.parent);
+			cnvArchive.removeChild(this);
+			
+			var fs:FileStream = new FileStream();
+			fs.open(Settings.ARCHIVE_XML_FILE, flash.filesystem.FileMode.WRITE);
+			fs.writeUTFBytes(new String("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"));
+			for each (var msg:Message in cnvArchive.getChildren()) {
+				for each (var stat:XML in msg.getXMLs()) {
+					fs.writeUTFBytes(stat.toString());   
+				}
+			}
+			fs.close();
+		}
+		
 		private function markBegin(event:MouseEvent):void {
 			this.setChildIndex(this.box, 0);
 			this.menu.visible = true;
@@ -247,7 +264,9 @@ package twit
 					this.parent.removeChild(this);
 				break;
 				
-				
+				case "Delete from Archive":
+					this.deleteFromArchive();
+				break;
 			}
 		}
 		
