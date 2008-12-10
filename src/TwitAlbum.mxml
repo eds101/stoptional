@@ -75,10 +75,6 @@
 					<mx:Button id="btnLogin" label="Login"
 						x="200" width="100"
 						click="login()"
-						/>
-					<mx:Button id="btnUpdateUserTimeline" label="Update User Timeline"
-						x="400" width="100"
-						click="updateUserTimeline()"
 						/>					
 				</mx:Canvas>
 			</mx:VBox>
