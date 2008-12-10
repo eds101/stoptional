@@ -57,7 +57,7 @@
 			
 		</mx:Canvas>
 		
-		<mx:TabNavigator id="canvas" width="100%" y="50">
+		<mx:TabNavigator id="canvas" width="100%" y="50" change="tabChange(event)">
 			<mx:VBox id="cnvSettings" label="Login/Settings"
 				height="100%" width="100%" autoLayout="true"
 				>
@@ -82,6 +82,8 @@
 						/>					
 				</mx:Canvas>
 			</mx:VBox>
+			<mx:VBox id="cnvArchive" label="Archive"
+				height="100%" width="100%" autoLayout="true" />
 			<mx:VBox id="cnvPublicTimeline" label="Public Timeline"
 				height="100%" width="100%" autoLayout="true" />
 			<mx:VBox id="cnvFriendsTimeline" label="Friends Timeline"
@@ -89,8 +91,6 @@
 			<mx:VBox id="cnvUserTimeline" label="User Timeline"
 				height="100%" width="100%" autoLayout="true" />
 			<mx:VBox id="cnvPrivateMessages" label="Private Message"
-				height="100%" width="100%" autoLayout="true" />
-			<mx:VBox id="cnvArchive" label="Archive"
 				height="100%" width="100%" autoLayout="true" />
 				
 		</mx:TabNavigator>
@@ -129,6 +129,7 @@
 			
 	<mx:Script>
 		<![CDATA[
+			import mx.controls.TabBar;
 			import mx.containers.GridRow;
 			import mx.core.ScrollPolicy;
 			import mx.events.ItemClickEvent;
@@ -153,7 +154,7 @@
 			
 			public function load():void {
 				Settings.getSettingsFromFile();		//load settings from file
-				loadArchive();
+				//loadArchive();
 				container.addEventListener(ResizeEvent.RESIZE, this.resize);
 				for each (var item:VBox in canvas.getChildren()) {
 					item.addEventListener(MouseEvent.MOUSE_MOVE, this.mouseMoveVertical);
@@ -208,10 +209,33 @@
 				}
 			}
 			
+			private function tabChange(event:Event) {
+				if (this.twitter == null && this.canvas.selectedIndex > 1) {
+					Alert.show ("You must login before you may view a timeline.");
+				} else switch (this.canvas.selectedIndex) {
+					case 1:
+						this.resize(new ResizeEvent(ResizeEvent.RESIZE));
+						this.loadArchive();
+					break;
+					case 2:
+						this.cnvPublicTimeline.removeAllChildren();
+						this.twitter.getPublicTimeline(this.getPublicTimelineListener);
+					break;
+					case 3:
+						this.cnvFriendsTimeline.removeAllChildren();
+						this.twitter.getFriendsTimeline(20, this.getFriendsTimelineListener);
+					break;
+					case 4:
+						this.cnvUserTimeline.removeAllChildren();
+						this.twitter.getUserTimeline(this.user.id, 20, this.getUserTimelineListener);
+					break;
+				}
+			}
+			
 			private function login():void {
 				this.twitter = new TwitterAPI(username.text, password.text);
 				twitter.login(this.loginListener);
-				Alert.show("Logging in...");				
+				//Alert.show("Logging in...");				
 			}
 			
 			private function loadUser(sn:String):void {
@@ -243,8 +267,8 @@
 			}
 			
 			private function loginListener(success:Boolean, authenticated:Boolean):void {
-				Alert.show("loginListener>\nsuccess: " + success);
-				Alert.show("logged in: " + authenticated);
+				//Alert.show("loginListener>\nsuccess: " + success);
+				//Alert.show("logged in: " + authenticated);
 				
 				if (!success) {
 					Alert.show("Login failed:\n\nError sending request to server.  Please try again.");
@@ -266,8 +290,8 @@
 			}
 
 			private function logoutListener(success:Boolean, loggedout:Boolean):void {
-				Alert.show("logoutListener>\nsuccess: " + success);
-				Alert.show("logged out: " + loggedout);
+				//Alert.show("logoutListener>\nsuccess: " + success);
+				//Alert.show("logged out: " + loggedout);
 				
 				if (!success) {
 					Alert.show("Logout failed:\n\nError sending request to server.  Please try again.");
@@ -283,11 +307,13 @@
 					this.twitpic = null;
 					this.twitter = null;
 					this.user = null;
+					
+					Alert.show("You are now logged out.");
 				}
 			}
 			
 			private function loadUserListener(success:Boolean, user:UserFull):void {
-				Alert.show("loadUserListener>\n" + success);
+				//Alert.show("loadUserListener>\n" + success);
 				if (!success) {
 					//no need for alert
 					//Alert.show("Updating user information failed.");
@@ -338,6 +364,29 @@
 						var s:Status = new Status(new XML(statuses[i]));
 						addStatus(s, this.cnvUserTimeline);
 					}
+					this.resize(new ResizeEvent(ResizeEvent.RESIZE));
+				} else {
+					Alert.show("An error occured updating the timeline.");
+				}
+			}
+			private function getFriendsTimelineListener(success:Boolean, statuses:Array):void {
+				if (success && statuses != null) {
+					for(var i:int = 0; i < statuses.length; i++) {
+						var s:Status = new Status(new XML(statuses[i]));
+						addStatus(s, this.cnvFriendsTimeline);
+					}
+					this.resize(new ResizeEvent(ResizeEvent.RESIZE));
+				} else {
+					Alert.show("An error occured updating the timeline.");
+				}
+			}
+			private function getPublicTimelineListener(success:Boolean, statuses:Array):void {
+				if (success && statuses != null) {
+					for(var i:int = 0; i < statuses.length; i++) {
+						var s:Status = new Status(new XML(statuses[i]));
+						addStatus(s, this.cnvPublicTimeline);
+					}
+					this.resize(new ResizeEvent(ResizeEvent.RESIZE));
 				} else {
 					Alert.show("An error occured updating the timeline.");
 				}
@@ -346,7 +395,7 @@
 			private function deleteArchived(unwanted:Message):void {
 				   
 				this.cnvArchive.removeChild(unwanted);
-				 
+				
 				var fs:FileStream = new FileStream();
 				fs.open(Settings.ARCHIVE_XML_FILE, FileMode.WRITE);
 				fs.writeUTFBytes(new String("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"));
@@ -398,13 +447,14 @@
 					if(s.text.substr(0,7)== "[photo]") {
 						var purls:Array = s.text.substr(7).split(' ');
 						for each (var purl:String in purls) {
-							purl = purl.replace("http://twitpic.com/",Settings.ARCHIVE_XML_FILE.nativePath).concat(".jpg");
-							s.text = "[photo]" + purl;
+							purl = purl.replace("http://twitpic.com/",Settings.ARCHIVE_XML_FILE.nativePath).concat(".jpg");							
 						}
+						s.text = "[photo]" + purl;
+						addStatus(s, this.cnvArchive);
 					} else {
 						addStatus(s, this.cnvArchive);
-					}				
-				}			
+					}
+				}
 			}
 			
 			private function addStatus(s:Status, timeline:VBox) {
@@ -422,7 +472,6 @@
 					timeline.addChild(this.openGroup[u]);
 					
 					Message(this.openGroup[u]).addXML(s.xml);
-					Message(this.openGroup[u]).archive();
 					this.openGroup[u].width = this.canvas.width;
 					this.openGroup[u] = null;
 				}
@@ -448,12 +497,14 @@
 				}
 				else
 				{
+					var msg:Message = new Message(s);
+					msg.addXML(s.xml);
 					if (txt.substr(0, 7) == "[photo]") {
 						for each (var src:String in txt.substr(7).split(" ")) {
 							if (src.length > 0) {
 								t = new Twit();
 								t.setImage(src);
-								timeline.addChild(t);
+								msg.addTwit(t);
 							}
 						}
 					}
@@ -461,13 +512,14 @@
 					{
 						t = new Twit();
 						t.setText(txt);
-						timeline.addChild(t);
+						msg.addTwit(t);
 					}
+					timeline.addChild(msg);
 				}
 			}
 			
 			private function updateStatusListener(success:Boolean, xml:XML):void {
-				Alert.show("updateStatusListener>\nsuccess: " + success);
+				//Alert.show("updateStatusListener>\nsuccess: " + success);
 				if (success) {
 					this.msgQueue.pop(); //toss old msg, which was successful
 					if (this.msgQueue.length > 0) {
@@ -547,7 +599,7 @@
 					break;
 					
 					case "Edit Keywords":
-					
+						this.loadArchive();
 					break;
 				}
 			}
