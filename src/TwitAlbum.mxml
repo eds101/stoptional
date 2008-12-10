@@ -91,6 +91,11 @@
 			private var user:User = null;
 			private var openGroup:Object = new Object();
 			
+			private const USER_TIMELINE = 1;
+			private const PUBLIC_TIMELINE = 2;
+			private const FRIENDS_TIMELINE = 3;
+			private const ARCHIVE_TIMELINE = 4;
+			
 			public function load():void {
 				Settings.getSettingsFromFile();		//load settings from file
 				loadArchive();
@@ -234,7 +239,7 @@
 					
 				}
 				
-				if (athis.user != null) {
+				if (this.user != null) {
 					twit.Settings.setTextcolor("#" + user.profile_text_color);
 					twit.Settings.setBackcolor("#" + user.profile_background_color);
 					twit.Settings.setLinkcolor("#" + user.profile_link_color);
@@ -267,10 +272,10 @@
 							var purls:Array = s.text.substr(7).split(' ');
 							for each (var purl:String in purls) {
 								s.text = "[photo]" + purl;
-								addStatus(s);
+								addStatus(s,USER_TIMELINE);
 							}
 						} else {
-							addStatus(s);
+							addStatus(s,USER_TIMELINE);
 						}
 					}
 				} else {
@@ -278,7 +283,7 @@
 				}
 			}
 			
-			private function addStatus(s:Status) {
+			private function addStatus(s:Status, timeLine:int) {
 				
 						var t:Twit = new Twit(s);
 						var u:String = s.user.screen_name;
@@ -289,7 +294,16 @@
 						}
 						else if (t.text.substr(0, 8) == "[/group]" && this.openGroup[u] != null)
 						{
-							this.cnvUserTimeline.addChild(this.openGroup[u]);
+							if(timeLine == USER_TIMELINE)
+								this.cnvUserTimeline.addChild(this.openGroup[u]);
+							else if (timeLine == ARCHIVE_TIMELINE)
+								this.cnvArchive.addChild(this.openGroup[u]);
+							else if (timeLine == PUBLIC_TIMELINE)
+								this.cnvPublicTimeline.addChild(this.openGroup[u]);
+							else if (timeLine == FRIENDS_TIMELINE)
+								this.cnvFriendsTimeline.addChild(this.openGroup[u]);
+								
+								
 							this.openGroup[u].width = this.canvas.width;
 							this.openGroup[u] = null;
 						}
@@ -299,9 +313,42 @@
 						}
 						else
 						{
-							this.cnvUserTimeline.addChild(t);
+							if(timeLine == USER_TIMELINE)
+								this.cnvUserTimeline.addChild(t);
+							else if (timeLine == ARCHIVE_TIMELINE)
+								this.cnvArchive.addChild(t);
+							else if (timeLine == PUBLIC_TIMELINE)
+								this.cnvPublicTimeline.addChild(t);
+							else if (timeLine == FRIENDS_TIMELINE)
+								this.cnvFriendsTimeline.addChild(t);
 						}
 			}
+			
+		/*	private function deleteArchived(statuses:Array):void {
+				var fs:FileStream = new FileStream();
+				fs.open(ARCHIVE_XML_FILE, FileMode.APPEND);
+				for each (var item:XML in statuses) {
+					fs.writeUTFBytes(item.toString());
+					if(item.child("text").toString().substr(0,7) == "[photo]") {
+						for each (var url:String in item.child("text").toString().substr(7).split(' ')) {
+							var req:URLRequest = new URLRequest(url.replace("twitpic.com/", "twitpic.com/show/full/"));
+							var stream:URLStream= new URLStream();
+							stream.addEventListener(Event.COMPLETE, function (e:Event) : void {
+		              				writeArchiveImageFile(e,url.substr(19).concat(".jpg"), stream);
+		       			 		});
+							stream.load(req);	
+							
+							req = new URLRequest(url.replace("twitpic.com/", "twitpic.com/show/thumb/"))
+							var stream2:URLStream= new URLStream();
+							stream2.addEventListener(Event.COMPLETE, function (e:Event) : void {
+		              				writeArchiveImageFile(e,url.substr(19).concat("_thumb.jpg"), stream2);
+		       			 		});
+							stream2.load(req);	
+						}
+					}
+				}
+				fs.close();
+			}*/
 			
 			private function loadArchive():void {
 				var fs:FileStream = new FileStream();
@@ -317,7 +364,7 @@
 							s.text = "[photo]" + purl;
 						}
 					} else {
-							addStatus(s);
+							addStatus(s,ARCHIVE_TIMELINE);
 					}				
 				}			
 			}
