@@ -343,6 +343,20 @@
 				}
 			}
 			
+			private function deleteArchived(unwanted:Message):void {
+				   
+				this.cnvArchive.removeChild(unwanted);
+				 
+				var fs:FileStream = new FileStream();
+				fs.open(Settings.ARCHIVE_XML_FILE, FileMode.WRITE);
+				fs.writeUTFBytes(new String("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"));
+				for each (var msg:Message in this.cnvArchive.getChildren()) {
+					for each (var stat:XML in msg.getXMLs()) {
+						fs.writeUTFBytes(stat.toString());   
+					}
+				}
+				fs.close();
+			}
 		/*	private function deleteArchived(statuses:Array):void {
 				var fs:FileStream = new FileStream();
 				fs.open(ARCHIVE_XML_FILE, FileMode.APPEND);
@@ -372,7 +386,12 @@
 			private function loadArchive():void {
 				var fs:FileStream = new FileStream();
 				fs.open(Settings.ARCHIVE_XML_FILE, FileMode.READ);
-				var statList:XMLList = XML(fs.readUTFBytes(fs.bytesAvailable)).status;
+				var data:String = fs.readUTFBytes(fs.bytesAvailable);
+				if (data.length != 0) {
+					data = data.replace("?>", "?><statuses type=\"array\">");
+					data += "</statuses>";
+				}
+				var statList:XMLList = XML(data).status;
 				fs.close();
 				for (var i:int = 0; i < statList.length(); i++) {
 					var s:Status = new Status(new XML(statList[i]));
@@ -396,10 +415,14 @@
 				if (txt.substr(0, 7) == "[group]")
 				{
 					this.openGroup[u] = new Message(s);
+					Message(this.openGroup[u]).addXML(s.xml);
 				}
 				else if (txt.substr(0, 8) == "[/group]" && this.openGroup[u] != null)
 				{
 					timeline.addChild(this.openGroup[u]);
+					
+					Message(this.openGroup[u]).addXML(s.xml);
+					Message(this.openGroup[u]).archive();
 					this.openGroup[u].width = this.canvas.width;
 					this.openGroup[u] = null;
 				}
@@ -420,7 +443,8 @@
 						t = new Twit();
 						t.setText(txt);
 						this.openGroup[u].addTwit(t);
-					}
+					}					
+					Message(this.openGroup[u]).addXML(s.xml);
 				}
 				else
 				{
@@ -558,6 +582,7 @@
 					Alert.show ("You must login before you may post an image.");
 				}
 			}
+			
 			
 			private function postText(text:String):void {
 				if (this.twitter != null) {
