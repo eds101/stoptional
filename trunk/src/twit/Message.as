@@ -9,15 +9,19 @@ package twit
 	import mx.containers.Grid;
 	import mx.containers.HBox;
 	import mx.containers.VBox;
+	import mx.controls.Alert;
 	import mx.controls.Image;
 	import mx.controls.Label;
 	import mx.controls.Text;
 	import mx.core.ScrollPolicy;
 	import mx.events.ResizeEvent;
 	import mx.formatters.DateFormatter;
+	import mx.managers.PopUpManager;
 	
 	public class Message extends Canvas
 	{
+		private var popup:HBox = new HBox();
+		
 		private var xmls:Array = new Array();
 		private var images:Array = new Array();
 		private var keywords:Array = new Array();
@@ -267,9 +271,33 @@ package twit
 				case "Delete from Archive":
 					this.deleteFromArchive();
 				break;
+				
+				case "Enlarge":
+					this.popupEnlarge();
+				break;
 			}
 		}
 		
+		public function popupEnlarge() {
+			if (this.images.length == 0) {
+				Alert.show("There are no photos to enlarge.");
+			} else {
+				this.popup.height = this.parent.parent.parent.height;
+				this.popup.width = this.parent.parent.width;
+				this.popup.addEventListener(MouseEvent.MOUSE_MOVE, this.mouseMove);
+				for each (var src:String in this.images) {
+					var img:Image = new Image();
+					img.source = src.replace("twitpic.com/", "twitpic.com/show/full/");
+					this.popup.addChild(img);
+				}
+				this.popup.addEventListener(MouseEvent.CLICK, this.clickHide);
+				PopUpManager.addPopUp(this.popup, this.parent.parent, true);
+			}
+		}
+		
+		private function clickHide(event:MouseEvent) {
+			PopUpManager.removePopUp(this.popup);
+		}
 		public function resizeHeight(event:ResizeEvent) {
 			if (event.oldHeight != (event.currentTarget.height)) {
 				this.height = this.box.height;
