@@ -1,16 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:WindowedApplication xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute"
+<mx:WindowedApplication xmlns:mx="http://www.adobe.com/2006/mxml"
+	 name="APP"
+	layout="absolute"
+	width="900"
+	height="500"
 	creationComplete="load()"
 	horizontalScrollPolicy="off"
 	verticalScrollPolicy="off"
-	>
+	xmlns:twit="twit.*">
 	<mx:Canvas id="container" height="100%" width="100%">
 		
 		<mx:Canvas width="100%" height="50"
 			horizontalScrollPolicy="off"
 			verticalScrollPolicy="off"
 			>
-				
+			
+			
+			
 			<mx:Grid id="boxUserInfo"
 				autoLayout="true"
 				horizontalScrollPolicy="off"
@@ -26,7 +32,7 @@
 						<mx:Text id="txtScreenName"	/>
 					</mx:GridItem>
 					<mx:GridItem>
-						<mx:LinkButton label="Logout" />
+						<mx:Text text="Logout"	/>
 					</mx:GridItem>
 				</mx:GridRow>
 				<mx:GridRow height="16">
@@ -57,7 +63,7 @@
 			
 		</mx:Canvas>
 		
-		<mx:TabNavigator id="canvas" width="100%" y="50" change="tabChange(event)">
+		<mx:TabNavigator id="canvas" width="100%" y="50" change="tabChangeEvent(event)" doubleClick="dblClick(event)" doubleClickEnabled="true">
 			<mx:VBox id="cnvSettings" label="Login/Settings"
 				height="100%" width="100%" autoLayout="true"
 				>
@@ -79,22 +85,62 @@
 				</mx:Canvas>
 			</mx:VBox>
 			<mx:VBox id="cnvArchive" label="Archive"
-				height="100%" width="100%" autoLayout="true" />
+				height="100%" width="100%" autoLayout="true"
+				childAdd="addMessageEvent(event)"
+				/>
 			<mx:VBox id="cnvPublicTimeline" label="Public Timeline"
-				height="100%" width="100%" autoLayout="true" />
+				height="100%" width="100%" autoLayout="true"
+				childAdd="addMessageEvent(event)"
+				/>
 			<mx:VBox id="cnvFriendsTimeline" label="Friends Timeline"
-				height="100%" width="100%" autoLayout="true" />
+				height="100%" width="100%" autoLayout="true"
+				childAdd="addMessageEvent(event)"
+				/>
 			<mx:VBox id="cnvUserTimeline" label="User Timeline"
-				height="100%" width="100%" autoLayout="true" />
+				height="100%" width="100%" autoLayout="true"
+				childAdd="addMessageEvent(event)"
+				/>
 			<mx:VBox id="cnvPrivateMessages" label="Private Message"
 				height="100%" width="100%" autoLayout="true" />
 				
 		</mx:TabNavigator>
 		
-		<mx:Grid id="compose" width="100%" autoLayout="true" horizontalGap="3" verticalGap="3">
+		<mx:HBox id="filterBox" width="100%"
+			 autoLayout="true"
+			 horizontalScrollPolicy="off" verticalScrollPolicy="off"
+			>
+			<mx:Label text="Filter by"/>
+			<mx:ComboBox id="filterBy" change="editFilterEvent(event)">
+				<mx:dataProvider>
+					<mx:String>Username:</mx:String>
+					<mx:String>Has keyword:</mx:String>
+					<mx:String>Has photo?</mx:String>
+				</mx:dataProvider>
+			</mx:ComboBox>
+			<mx:TextInput id="filterText" change="editFilterEvent(event)" />
+			<mx:Label text="Sort by"/>
+			<mx:ComboBox id="sortBy" change="editFilterEvent(event)">
+				<mx:dataProvider>
+					<mx:String>Username</mx:String>
+					<mx:String>Timestamp</mx:String>
+					<mx:String>Has photo?</mx:String>
+				</mx:dataProvider>
+			</mx:ComboBox>
+			<!--mx:TextInput id="sortText" /-->
+			<mx:Label text="Apply filter:"/>
+			<mx:ComboBox id="applyFilter" change="filter()" text="">
+				<mx:dataProvider>
+					<mx:String>Click here to toggle filter</mx:String>
+					<mx:String>Yes</mx:String>
+					<mx:String>No</mx:String>
+				</mx:dataProvider>
+			</mx:ComboBox>
+		</mx:HBox>
+		
+		<mx:Grid id="compose" width="100%" autoLayout="true" horizontalGap="3" verticalGap="3" horizontalScrollPolicy="off" verticalScrollPolicy="off">
 			<mx:GridRow id="photoRow" autoLayout="true">
 				<mx:GridItem colSpan="2" autoLayout="true">
-					<mx:HBox id="attachedPhotos" width="100%">
+					<mx:HBox id="attachedPhotos">
 						
 					</mx:HBox>
 				</mx:GridItem>
@@ -107,7 +153,9 @@
 					</mx:TextArea>
 				</mx:GridItem>
 				<mx:GridItem id="buttonColumn" autoLayout="true">
-					<mx:ButtonBar direction="vertical" itemClick="buttonClickListener(event)">
+					<mx:ButtonBar id="sendButtons" direction="vertical"
+						itemClick="buttonClickListener(event)"
+						>
 						<mx:dataProvider>
 							<mx:Array id="composeButtons">
 								<mx:String>Add Photo</mx:String>
@@ -125,6 +173,8 @@
 			
 	<mx:Script>
 		<![CDATA[
+			import twit.Direct;
+			import mx.events.ChildExistenceChangedEvent;
 			import mx.controls.TabBar;
 			import mx.containers.GridRow;
 			import mx.core.ScrollPolicy;
@@ -143,15 +193,73 @@
 			private var twitpic:TwitPicAPI = null;
 			private var twitter:TwitterAPI = null;
 			
+			private var timer:Timer = new Timer(3000);
+			
 			private var user:User = null;
 			private var openGroup:Object = new Object();
 			
 			private var msgQueue:Array = new Array();
 			
+			public function dblClick(event:MouseEvent) {
+				if(event.target.parent.name == "tabBar") tabChange();
+			}
+			
+			public function editFilterEvent(event:Event) {
+				this.applyFilter.selectedIndex = 0;
+			}
+			
+			public function filter() {
+				if (this.applyFilter.text == "Yes") {
+					if (this.canvas.selectedIndex > 0) {
+						var msgList:VBox = VBox(this.canvas.selectedChild);
+						
+						var filtered:Array = msgList.getChildren().filter(filterFunction);
+						msgList.removeAllChildren();
+						for each (var msg:Message in filtered) {
+							msgList.addChild(msg);
+						}
+					}
+				//	this.applyFilter.selectedIndex = 0;
+				} else {
+					if (this.canvas.selectedIndex > 0) {
+						var msgList:VBox = VBox(this.canvas.selectedChild);
+						
+						tabChange();
+						/*
+						for each (var msg:Message in msgList.getChildren()) {
+							msg.visible = true;
+						}
+						*/
+					}
+				}
+				this.resize();
+			}
+			
+			private function filterFunction(msg:*, index:int, arr:Array):Boolean {
+				switch (filterBy.text) {
+					case "Username:":
+						return this.filterText.text == "" || (msg.author.toLowerCase() == this.filterText.text.toLowerCase())
+					break;
+					case "Has keyword:":
+						return this.filterText.text == "" || msg.hasKeyword(this.filterBy.text);
+					break;
+					case "Has photo?":
+						return (msg.getPhotos().length > 0)
+					break;
+					
+					default:
+						return true;
+				}
+			}
+
+			
 			public function load():void {
 				Settings.getSettingsFromFile();		//load settings from file
 				//loadArchive();
-				container.addEventListener(ResizeEvent.RESIZE, this.resize);
+				//this.canvas.doubleClickEnabled = true;
+				//this.canvas.addEventListener(MouseEvent.DOUBLE_CLICK, dblClick);
+				
+				container.addEventListener(ResizeEvent.RESIZE, this.resizeEvent);
 				for each (var item:VBox in canvas.getChildren()) {
 					item.addEventListener(MouseEvent.MOUSE_MOVE, this.mouseMoveVertical);
 					
@@ -160,13 +268,18 @@
 				
 				this.boxUserInfo.horizontalScrollPolicy = ScrollPolicy.OFF;
 				this.boxUserInfo.verticalScrollPolicy = ScrollPolicy.OFF;
+				this.attachedPhotos.horizontalScrollPolicy = ScrollPolicy.OFF;
+				this.attachedPhotos.verticalScrollPolicy = ScrollPolicy.OFF;
+				this.attachedPhotos.addEventListener(MouseEvent.MOUSE_MOVE, this.mouseMoveHorizontal);
+				this.filterBox.addEventListener(MouseEvent.MOUSE_MOVE, this.mouseMoveHorizontal);
+				
 				//var t = new TwitterAPI(this.username.text, this.password.text);
 				//t.getDirectMsg(getDirectMsgListener);
 				//t.getSentMsg(getSentMsgListener);
 				//t.sendDirectMsg("mkb2014", "What are you doing now?", sendDirectMsgListener);
 				//t.destroyDirectMsg("44154900", destroyDirectMsgListener);
 				
-				this.resize(new ResizeEvent(ResizeEvent.RESIZE));
+				this.resize();
 			}
 			
 			private function mouseMoveVertical(event:MouseEvent) {
@@ -184,19 +297,45 @@
 				} 
 			}
 			
-			private function resize(event:ResizeEvent):void {
-				//this.container.width = this.width - 24;
-				//this.container.height = this.height - 24;
+			private function mouseMoveHorizontal(event:MouseEvent) {
+				var container = (event.currentTarget);
+				if (!event.buttonDown && container.getChildren().length > 0) {
+					var x:int = event.stageX;
+					var c:DisplayObject = container.getChildAt(container.getChildren().length - 1);
+					var	w:int = c.x + c.width;
+					
+					x -= container.x;
+					
+					container.horizontalScrollPosition = (w - container.width) * (x / container.width);
+					//event.stopPropagation();
+				} 
+			}
+			
+			private function resizeEvent(event:ResizeEvent):void {
+				resize();
+			}
+			private function resize():void {
+				//this.container.width = this.width - 8;
+				//this.container.height = this.height - 8;
 				
 				//this.tabbar.width = this.container.width;
 				this.canvas.width = this.container.width;
 				this.boxUserInfo.width = this.container.width;
+				
+				this.sendButtons.validateNow();
+				this.statusMessage.height = this.sendButtons.height;
+				this.buttonColumn.width = this.sendButtons.width;
+				
 				this.compose.width = this.container.width;
 				this.compose.height = this.attachedPhotos.height + this.statusMessage.height + 10
 				this.statusColumn.width = this.compose.width - this.buttonColumn.width - 10;
-				this.statusMessage.height = this.statusColumn.height;
 				this.compose.y = this.container.height - this.compose.height;
-				this.canvas.height = this.compose.y - this.canvas.y;
+				this.canvas.height = this.compose.y - this.canvas.y - 45;
+				
+				this.filterBox.y = this.compose.y - 45; 
+				this.filterBox.width = this.compose.width - 4 
+				
+				this.attachedPhotos.width = this.compose.width - 4; 
 				
 				for each(var tab:VBox in this.canvas.getChildren()) {
 					tab.width = this.canvas.width;
@@ -207,25 +346,50 @@
 				}
 			}
 			
-			private function tabChange(event:Event) {
+			
+			private function tabChangeEvent(event:Event) {
+				tabChange();
+			}
+			
+			private function addMessageEvent(event:ChildExistenceChangedEvent) {
+				var msg:Message = Message(event.relatedObject);
+				var container:VBox = VBox(event.currentTarget);	
+				if (this.applyFilter.text == "Yes") {
+					if ( !filterFunction(msg, 0, null)) container.removeChild(msg);
+				}
+			}
+			
+			private function tabChange() {
 				if (this.twitter == null && this.canvas.selectedIndex > 1) {
 					Alert.show ("You must login before you may view a timeline.");
 				} else switch (this.canvas.selectedIndex) {
 					case 1:
-						this.resize(new ResizeEvent(ResizeEvent.RESIZE));
+						this.resize();
+						this.cnvArchive.removeAllChildren();
 						this.loadArchive();
 					break;
 					case 2:
 						this.cnvPublicTimeline.removeAllChildren();
-						this.twitter.getPublicTimeline(this.getPublicTimelineListener);
+						this.twitter.getPublicTimeline(this.user.screen_name, 20, "1", this.getPublicTimelineListener);
+						//var tl:Timeline = this.cnvPublicTimeline; 
+						//this.twitter.getPublicTimeline(this.user.screen_name, 20, tl.last_id, tl.getTimelineListener);
 					break;
 					case 3:
 						this.cnvFriendsTimeline.removeAllChildren();
-						this.twitter.getFriendsTimeline(20, this.getFriendsTimelineListener);
+						this.twitter.getFriendsTimeline(this.user.screen_name, 20, "1", this.getFriendsTimelineListener);
+						//var tl:Timeline = this.cnvFriendsTimeline; 
+						//this.twitter.getFriendsTimeline(this.user.screen_name, 20, tl.last_id, tl.getTimelineListener);
 					break;
 					case 4:
 						this.cnvUserTimeline.removeAllChildren();
-						this.twitter.getUserTimeline(this.user.id, 20, this.getUserTimelineListener);
+						this.twitter.getUserTimeline(this.user.screen_name, 20, "1", this.getUserTimelineListener);
+						//var tl:Timeline = this.cnvUserTimeline; 
+						//this.twitter.getUserTimeline(this.user.screen_name, 20, tl.last_id, tl.getTimelineListener);
+					break;
+					case 5:
+						this.cnvPrivateMessages.removeAllChildren();
+						this.twitter.getDirectMsg(this.getDirectMsgListener);
+//						this.twitter.getSentMsg(this.getSentMsgListener);
 					break;
 				}
 			}
@@ -254,9 +418,27 @@
 			
 			private function updateUserTimeline():void {
 				if (this.twitter != null)
-					this.twitter.getUserTimeline(this.user.id, 30, this.getUserTimelineListener);
+					this.twitter.getUserTimeline(this.user.id, 20, "", this.getUserTimelineListener);
 				else
 					Alert.show("You must be logged in to update the timeline.");					
+			}
+			
+			private function timerListener(event:TimerEvent) {
+				if (this.user != null) {
+					this.loadUser(this.user.screen_name);
+					tabChange();
+		/*			switch(this.canvas.selectedIndex) {
+						case 2:						
+						//	twitter.getPublicTimeline(this.getPublicTimelineListener);
+						break;
+						case 3:						
+							twitter.getFriendsTimeline(this.user.screen_name, 20, "", this.getPublicTimelineListener);
+						break;
+						case 4:
+							twitter.getUserTimeline(this.user.screen_name, 20, "", this.getPublicTimelineListener);
+						break;
+					}
+			*/	}
 			}
 			
 			private function genericListener(success:Boolean, xml:XML):void {
@@ -284,6 +466,9 @@
 					this.twitpic = new TwitPicAPI(username.text, password.text);
 					//load user data
 					loadUser(username.text);
+					
+					//this.timer.start();
+					this.timer.addEventListener(TimerEvent.TIMER, this.timerListener);
 				}
 			}
 
@@ -362,7 +547,7 @@
 						var s:Status = new Status(new XML(statuses[i]));
 						addStatus(s, this.cnvUserTimeline);
 					}
-					this.resize(new ResizeEvent(ResizeEvent.RESIZE));
+					this.resize();
 				} else {
 					Alert.show("An error occured updating the timeline.");
 				}
@@ -373,7 +558,7 @@
 						var s:Status = new Status(new XML(statuses[i]));
 						addStatus(s, this.cnvFriendsTimeline);
 					}
-					this.resize(new ResizeEvent(ResizeEvent.RESIZE));
+					this.resize();
 				} else {
 					Alert.show("An error occured updating the timeline.");
 				}
@@ -384,7 +569,7 @@
 						var s:Status = new Status(new XML(statuses[i]));
 						addStatus(s, this.cnvPublicTimeline);
 					}
-					this.resize(new ResizeEvent(ResizeEvent.RESIZE));
+					this.resize();
 				} else {
 					Alert.show("An error occured updating the timeline.");
 				}
@@ -442,12 +627,21 @@
 				fs.close();
 				for (var i:int = 0; i < statList.length(); i++) {
 					var s:Status = new Status(new XML(statList[i]));
-					if(s.text.substr(0,7)== "[photo]") {
+					if(false && s.text.substr(0,7)== "[photo]") {
 						var purls:Array = s.text.substr(7).split(' ');
+						var url:String = "[photo]";
 						for each (var purl:String in purls) {
-							purl = purl.replace("http://twitpic.com/",Settings.ARCHIVE_XML_FILE.nativePath).concat(".jpg");							
+							purl = purl.replace("http://twitpic.com/", Settings.ARCHIVE_XML_FILE.nativePath).concat(".jpg");
+							purl = purl.replace("archive.xml", "");
+							purl = "@Embed(source='" + purl + ".jpg')";
+							var regex:RegExp = new RegExp();
+							regex = / /g;
+							purl = purl.replace(regex, "%20");
+							regex = /\\/g;
+							purl = purl.replace(regex, "/");
+							url += purl + " ";									
 						}
-						s.text = "[photo]" + purl;
+						s.text = url;
 						addStatus(s, this.cnvArchive);
 					} else {
 						addStatus(s, this.cnvArchive);
@@ -462,7 +656,8 @@
 				
 				if (txt.substr(0, 7) == "[group]")
 				{
-					this.openGroup[u] = new Message(s);
+					this.openGroup[u] = new Message();
+					Message(this.openGroup[u]).setStatus(s);
 					Message(this.openGroup[u]).addXML(s.xml);
 				}
 				else if (txt.substr(0, 8) == "[/group]" && this.openGroup[u] != null)
@@ -475,43 +670,49 @@
 				}
 				else if (this.openGroup[u] != null)
 				{
-					var t:Twit;
-					if (txt.substr(0, 7) == "[photo]") {
-						for each (var src:String in txt.substr(7).split(" ")) {
-							if (src.length > 0) {
-								t = new Twit();
-								t.setImage(src);
-								this.openGroup[u].addTwit(t);
-							}
-						}
-					}
-					else
-					{
-						t = new Twit();
-						t.setText(txt);
-						this.openGroup[u].addTwit(t);
-					}					
+					this.openGroup[u].addStatus(s);
 					Message(this.openGroup[u]).addXML(s.xml);
 				}
 				else
 				{
-					var msg:Message = new Message(s);
+					var msg:Message = new Message();
+					msg.setStatus(s);
+					msg.addStatus(s);
 					msg.addXML(s.xml);
-					if (txt.substr(0, 7) == "[photo]") {
-						for each (var src:String in txt.substr(7).split(" ")) {
-							if (src.length > 0) {
-								t = new Twit();
-								t.setImage(src);
-								msg.addTwit(t);
-							}
-						}
-					}
-					else
-					{
-						t = new Twit();
-						t.setText(txt);
-						msg.addTwit(t);
-					}
+					timeline.addChild(msg);
+				}
+			}
+			
+			private function addDirect(d:Direct, timeline:VBox) {
+				var txt:String = d.text;
+				var t:Twit = new Twit();
+				var u:String = d.sender_screen_name;
+				
+				if (txt.substr(0, 7) == "[group]")
+				{
+					this.openGroup[u] = new Message();
+					Message(this.openGroup[u]).setDirect(d);
+					Message(this.openGroup[u]).addXML(d.xml);
+				}
+				else if (txt.substr(0, 8) == "[/group]" && this.openGroup[u] != null)
+				{
+					timeline.addChild(this.openGroup[u]);
+					
+					Message(this.openGroup[u]).addXML(d.xml);
+					this.openGroup[u].width = this.canvas.width;
+					this.openGroup[u] = null;
+				}
+				else if (this.openGroup[u] != null)
+				{
+					this.openGroup[u].addDirect(d);
+					Message(this.openGroup[u]).addXML(d.xml);
+				}
+				else
+				{
+					var msg:Message = new Message();
+					msg.setDirect(d);
+					msg.addDirect(d);
+					msg.addXML(d.xml);
 					timeline.addChild(msg);
 				}
 			}
@@ -524,6 +725,12 @@
 						var text:String = this.msgQueue.pop(); //get next msg
 						this.twitter.updateStatus(text, this.updateStatusListener); //send
 						this.msgQueue.push(text); //push msg back in in case it doesnt go through
+					} else {
+						this.statusMessage.htmlText = "";
+						this.statusMessage.text = "";
+						this.attachedPhotos.removeAllChildren();
+						this.attachedPhotos.height = 0;
+						this.resize();
 					}
 				} else {
 					var text:String = this.msgQueue.pop(); //get next msg
@@ -557,14 +764,29 @@
 				Alert.show(xml.toString());
 			}
 
-			private function getDirectMsgListener(success:Boolean, xml:XML):void {
-				Alert.show("success: " + success);
-				Alert.show(xml.toString());
+			private function getDirectMsgListener(success:Boolean, msgs:Array):void {
+				if (success && msgs != null) {
+					for(var i:int = 0; i < msgs.length; i++) {
+	//					Alert.show(msgs[i]);
+						var d:Direct = new Direct(msgs[i]);
+						addDirect(d, this.cnvPrivateMessages);
+					}
+					this.resize();
+				} else {
+					Alert.show("An error occured reading your private messages.");
+				}
 			}
 			
-			private function getSentMsgListener(success:Boolean, xml:XML):void {
-				Alert.show("success: " + success);
-				Alert.show(xml.toString());
+			private function getSentMsgListener(success:Boolean, msgs:Array):void {
+				if (success && msgs != null) {
+					for(var i:int = 0; i < msgs.length; i++) {
+						var d:Direct = new Direct(new XML(msgs[i]));
+						addDirect(d, this.cnvPrivateMessages);
+					}
+					this.resize();
+				} else {
+					Alert.show("An error occured reading your private messages.");
+				}
 			}
 			
 			private function sendDirectMsgListener(success:Boolean, xml:XML):void {
@@ -583,7 +805,8 @@
 				t.setImage(url);
 				this.attachedPhotos.addChild(t);
 				this.attachedPhotos.height = 150;
-				this.resize(new ResizeEvent(ResizeEvent.RESIZE));
+				
+				this.resize();
 			}
 			
 			private function buttonClickListener(event:ItemClickEvent) {
