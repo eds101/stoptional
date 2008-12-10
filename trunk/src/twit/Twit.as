@@ -34,6 +34,7 @@ package twit
 		public function setImage(url:String):void {
 			this.imageUrl = url;
 			this.thumbUrl = url.replace("twitpic.com/", "twitpic.com/show/thumb/");
+			this.thumbUrl = imageUrl.replace(".jpg", "_thumb.jpg");
 			this.fullUrl = url.replace("twitpic.com/", "twitpic.com/show/full/");
 			
 			var img:Image = new Image();
