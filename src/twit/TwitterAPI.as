@@ -82,7 +82,7 @@ package twit
 		
 		private function listenerFail(event:HTTPStatusEvent):void 
 		{
-			if (event.status != 200)
+			if (event.status != 200 && event.responseURL != "http://twitter.com/account/end_session")
 				Alert.show("Error interfacing with Twitter API:\n" + event.responseURL + "\n\n" + "Status:" + event.status);
 		}
 		
@@ -381,7 +381,9 @@ package twit
 				
 				loader.removeEventListener(Event.COMPLETE, getRateLimitComplete);
 				
-				this.listenerGetRateLimit(true, xml);
+				var percent:int = int(xml.child("remaining-hits")) / int(xml.child("hourly-limit"));
+				
+				this.listenerGetRateLimit(true, percent);
 			}
 			catch (e:Error)
 			{
@@ -506,7 +508,6 @@ package twit
 			}
 			catch (e:Error)
 			{
-				Alert.show(e.toString());
 				this.listenerGetDirectMsg(false, null);
 			}
 		}
