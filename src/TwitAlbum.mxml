@@ -580,7 +580,6 @@
 					this.txtFollowers.text = "" + user.followers_count;
 					this.txtFriends.text = "" + user.friends_count;
 					this.txtUpdates.text = "" + user.statuses_count;
-					this.txtRateLimit.text = "";
 					this.txtUrl.text = user.url;
 					
 					for each (var row:GridRow in this.boxUserInfo.getChildren()) {						
@@ -589,13 +588,7 @@
 							item.setStyle("color", "#" + user.profile_text_color);							
 						}
 					}
-					/*
-					this.txtScreenName.setStyle("color", "#" + user.profile_text_color);
-					this.txtName.setStyle("color", "#" + user.profile_text_color);
-					this.txtLocation.setStyle("color", "#" + user.profile_text_color);
-					this.txtDescription.setStyle("color", "#" + user.profile_text_color);
-					this.txtFollowers.setStyle("color", "#" + user.profile_text_color);
-					*/
+				
 				}
 			}
 			
@@ -717,12 +710,22 @@
 					this.openGroup[u] = new Message();
 					Message(this.openGroup[u]).setStatus(s);
 					Message(this.openGroup[u]).addXML(s.xml);
+					if (timeline == this.cnvArchive) {
+						Message(this.openGroup[u]).setMsgType(2);
+					} else {
+						Message(this.openGroup[u]).setMsgType(0);
+					}
 				}
 				else if (txt.substr(0, 8) == "[/group]" && this.openGroup[u] != null)
 				{
 					timeline.addChild(this.openGroup[u]);
 					
 					Message(this.openGroup[u]).addXML(s.xml);
+					if (timeline == this.cnvArchive) {
+						Message(this.openGroup[u]).setMsgType(2);
+					} else {
+						Message(this.openGroup[u]).setMsgType(0);
+					}
 					this.openGroup[u].width = this.canvas.width;
 					this.openGroup[u] = null;
 				}
@@ -730,6 +733,11 @@
 				{
 					this.openGroup[u].addStatus(s);
 					Message(this.openGroup[u]).addXML(s.xml);
+					if (timeline == this.cnvArchive) {
+						Message(this.openGroup[u]).setMsgType(2);
+					} else {
+						Message(this.openGroup[u]).setMsgType(0);
+					}
 				}
 				else
 				{
@@ -737,6 +745,11 @@
 					msg.setStatus(s);
 					msg.addStatus(s);
 					msg.addXML(s.xml);
+					if (timeline == this.cnvArchive) {
+						msg.setMsgType(2);
+					} else {
+						msg.setMsgType(0);
+					}
 					timeline.addChild(msg);
 				}
 			}
