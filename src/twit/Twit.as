@@ -61,6 +61,8 @@ package twit
 				
 			txt = new Text();
 			txt.setStyle("color", Settings.getTextcolor());
+			txt.setStyle("fontWeight", "bold");
+			txt.setStyle("fontSize", "14");
 			txt.text = this.text;
 			
 			//txt.height = 20;

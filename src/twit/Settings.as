@@ -5,6 +5,7 @@ package twit
 	import flash.net.URLRequest;
 	import flash.net.URLStream;
 	import flash.utils.ByteArray;
+	import mx.controls.Alert;
 	
 	public class Settings
 	{
@@ -141,28 +142,35 @@ package twit
 		public static function archive(statuses:Array):void {
 			var fs:FileStream = new FileStream();
 			
-			fs.open(ARCHIVE_XML_FILE, FileMode.APPEND);
-			for each (var item:XML in statuses) {
-				fs.writeUTFBytes(item.toXMLString());
-				if(item.child("text").toString().substr(0,7) == "[photo]") {
-					for each (var url:String in item.child("text").toString().substr(7).split(' ')) {
-						var req:URLRequest = new URLRequest(url.replace("twitpic.com/", "twitpic.com/show/full/"));
-						var stream:URLStream= new URLStream();
-						stream.addEventListener(Event.COMPLETE, function (e:Event) : void {
-                  				writeArchiveImageFile(e,url.substr(19).concat(".jpg"), stream);
-           			 		});
-						stream.load(req);	
-						
-						req = new URLRequest(url.replace("twitpic.com/", "twitpic.com/show/thumb/"))
-						var stream2:URLStream= new URLStream();
-						stream2.addEventListener(Event.COMPLETE, function (e:Event) : void {
-                  				writeArchiveImageFile(e,url.substr(19).concat("_thumb.jpg"), stream2);
-           			 		});
-						stream2.load(req);	
+			try {
+				fs.open(ARCHIVE_XML_FILE, FileMode.APPEND);
+				for each (var item:XML in statuses) {
+					fs.writeUTFBytes(item.toXMLString());
+					if(item.child("text").toString().substr(0,7) == "[photo]") {
+						for each (var url:String in item.child("text").toString().substr(7).split(' ')) {
+							var req:URLRequest = new URLRequest(url.replace("twitpic.com/", "twitpic.com/show/full/"));
+							var stream:URLStream= new URLStream();
+							stream.addEventListener(Event.COMPLETE, function (e:Event) : void {
+	                  				writeArchiveImageFile(e,url.substr(19).concat(".jpg"), stream);
+	           			 		});
+							stream.load(req);	
+							
+							req = new URLRequest(url.replace("twitpic.com/", "twitpic.com/show/thumb/"))
+							var stream2:URLStream= new URLStream();
+							stream2.addEventListener(Event.COMPLETE, function (e:Event) : void {
+	                  				writeArchiveImageFile(e,url.substr(19).concat("_thumb.jpg"), stream2);
+	           			 		});
+							stream2.load(req);	
+						}
 					}
 				}
+				fs.close();
+				
+				Alert.show("Message archived.");
 			}
-			fs.close();
+			catch (error:Error) {
+				Alert.show("Error saving archive file:\n\n" + error.message);
+			}
 		}
 	
 	}

@@ -21,6 +21,7 @@ package twit
 	public class Message extends Canvas
 	{
 		private var popup:HBox = new HBox();
+		private var moreInfo:Canvas = new Canvas();
 		
 		private var xmls:Array = new Array();
 		private var images:Array = new Array();
@@ -42,6 +43,8 @@ package twit
 		private var msgType:int;
 		
 		public var author:String = "";
+		public var authorInfo:User;
+		
 		public var timestamp:Date = new Date();
 		
 		public function Message():void {
@@ -89,38 +92,31 @@ package twit
 		
 		public function setStatus(s:Status) {
 			var user:User = s.user;
+			this.authorInfo = s.user;
 			this.author = user.screen_name;
 			
 			var img:Image = new Image();
 			img.source = user.profile_image_url;
 			this.infoContainer.addChild(img);
 			
-			var lbl:Label = new Label();
-			lbl.text = this.author;
-			this.infoContainer.addChild(lbl);
-			this.infoContainer.horizontalScrollPolicy = ScrollPolicy.OFF;
-			this.infoContainer.verticalScrollPolicy = ScrollPolicy.OFF;
 			
-			lbl = new Label();
-			lbl.text = user.name;
-			this.infoContainer.addChild(lbl);
-			
-			lbl = new Label();
-			lbl.text = user.location;
-			this.infoContainer.addChild(lbl);
-			
-			lbl = new Label();
 			var df:DateFormatter = new DateFormatter();
 			df.formatString = "MMMM D, YYYY, J:NN:SS";
-			lbl.text = df.format(s.created_at);
-			this.infoContainer.addChild(lbl);
 			
+			this.infoContainer.addChild(newText(this.author));
+			this.infoContainer.addChild(newText(user.name));
+			this.infoContainer.addChild(newText(user.location));
+			this.infoContainer.addChild(newText(df.format(s.created_at)));
+			
+			this.infoContainer.horizontalScrollPolicy = ScrollPolicy.OFF;
+			this.infoContainer.verticalScrollPolicy = ScrollPolicy.OFF;
 			
 			this.timestamp = new Date(s.created_at);
 		}
 		
 		public function setDirect(d:Direct) {
 			var user:User = d.sender;
+			this.authorInfo = d.sender;
 			this.author = user.screen_name;
 			
 			var img:Image = new Image();
@@ -154,7 +150,11 @@ package twit
 		}
 		
 		public function hasKeyword(key:String):Boolean {
-			return (this.keywords.indexOf(key.toLowerCase()) >= 0)
+			for each (var k:String in this.keywords) {
+				if (k.toLowerCase() == key.toLowerCase())
+					return true;				
+			}
+			return false;
 		}
 		public function getPhotos():Array {
 			return this.images;
@@ -275,6 +275,10 @@ package twit
 				case "Enlarge":
 					this.popupEnlarge();
 				break;
+				
+				case "More Info":
+					this.popupInfo();
+				break;
 			}
 		}
 		
@@ -285,6 +289,7 @@ package twit
 				this.popup.height = this.parent.parent.parent.height;
 				this.popup.width = this.parent.parent.width;
 				this.popup.addEventListener(MouseEvent.MOUSE_MOVE, this.mouseMove);
+				this.popup.removeAllChildren();
 				for each (var src:String in this.images) {
 					var img:Image = new Image();
 					img.source = src.replace("twitpic.com/", "twitpic.com/show/full/");
@@ -295,8 +300,42 @@ package twit
 			}
 		}
 		
+		public function popupInfo() {
+			var img:Image = new Image();
+			img.source = this.authorInfo.profile_image_url;
+			
+			var hb:HBox = new HBox();
+			
+			
+			var vb:VBox = new VBox();
+			vb.addChild(newText(authorInfo.screen_name));
+			vb.addChild(newText(authorInfo.name));
+			vb.addChild(newText(authorInfo.location));
+			vb.addChild(newText(authorInfo.description));
+			
+			hb.addChild(img);
+			hb.addChild(vb);
+			
+			this.moreInfo.height = this.parent.parent.parent.height;
+			this.moreInfo.width = this.parent.parent.width;
+			this,moreInfo.addChild(hb);
+			hb.width = 450;
+			hb.height = 200;
+			hb.setStyle("backgroundColor", "#afafaf");
+			hb.x = (this.moreInfo.width - hb.width) / 2
+			hb.y = (this.moreInfo.height - hb.height) / 2
+			
+			this.moreInfo.addEventListener(MouseEvent.CLICK, this.clickHide);
+			
+			this.moreInfo.alpha = .75;
+			
+			PopUpManager.addPopUp(this.moreInfo, this.parent.parent, true);
+		}
+		
+		
 		private function clickHide(event:MouseEvent) {
 			PopUpManager.removePopUp(this.popup);
+			PopUpManager.removePopUp(this.moreInfo);
 		}
 		public function resizeHeight(event:ResizeEvent) {
 			if (event.oldHeight != (event.currentTarget.height)) {
@@ -354,6 +393,8 @@ package twit
 			var t:Text = new Text();
 			t.text = text;
 			t.setStyle("color", Settings.getTextcolor());
+			t.setStyle("fontWeight", "bold");
+			t.setStyle("fontSize", "14");
 			return t;
 		}		 
 	}
