@@ -22,9 +22,9 @@
 				horizontalScrollPolicy="off"
 				verticalScrollPolicy="off"
 				horizontalGap="8" verticalGap="1"
-				height="50"
+				height="60"
 				>
-				<mx:GridRow height="16">
+				<mx:GridRow height="20">
 					<mx:GridItem rowSpan="3">
 						<mx:Image id="imgIcon" />
 					</mx:GridItem>
@@ -38,13 +38,13 @@
 						<mx:Text id="txtDescription" />
 					</mx:GridItem>
 				</mx:GridRow>
-				<mx:GridRow height="16">
+				<mx:GridRow height="20">
 					<mx:GridItem>					
 						<mx:Text id="txtFriends" toolTip="Friends"/>
 						<mx:Text id="txtFollowers" toolTip="Followers"/>
 						<mx:Text id="txtUpdates" toolTip="Updates"/>
 					</mx:GridItem>
-					<mx:GridItem>
+					<mx:GridItem id="locationBox" toolTip="Click to change location.">
 						<mx:Text id="txtLocation" />
 						<mx:TextInput id="changeLocation">
 						</mx:TextInput>
@@ -53,7 +53,7 @@
 						<mx:Text id="txtUrl" />
 					</mx:GridItem>
 				</mx:GridRow>
-				<mx:GridRow height="16">
+				<mx:GridRow height="20">
 					<mx:GridItem toolTip="Rate Limit">
 						<mx:Text id="txtRateLimit"/>
 					</mx:GridItem>
@@ -184,6 +184,8 @@
 	<mx:Script>
 		<![CDATA[
 			import twit.Direct;
+			
+			import mx.managers.PopUpManager;
 			import mx.events.ChildExistenceChangedEvent;
 			import mx.controls.TabBar;
 			import mx.containers.GridRow;
@@ -209,6 +211,9 @@
 			private var openGroup:Object = new Object();
 			
 			private var msgQueue:Array = new Array();
+			
+			private var keywordPopup:VBox = new VBox();
+			private var keywords:TextInput = new TextInput();
 			
 			public function dblClick(event:MouseEvent) {
 				if(event.target.parent.name == "tabBar") tabChange();
@@ -247,7 +252,7 @@
 						return this.filterText.text == "" || (msg.author.toLowerCase() == this.filterText.text.toLowerCase())
 					break;
 					case "Has keyword:":
-						return this.filterText.text == "" || msg.hasKeyword(this.filterBy.text);
+						return this.filterText.text == "" || msg.hasKeyword(this.filterText.text);
 					break;
 					case "Has photo?":
 						return (msg.getPhotos().length > 0)
@@ -285,6 +290,7 @@
 							return 0;
 						}
 					break;
+					
 					case "Has photo?":
 						var p1:int = msg1.getPhotos().length;
 						var p2:int = msg2.getPhotos().length;
@@ -316,6 +322,14 @@
 					item.horizontalScrollPolicy = ScrollPolicy.OFF;
 				}
 				
+				var l:Text = new Text()
+				l.text = "Enter Keywords (separeted by spaces)";
+				this.keywords.maxChars = 135;
+				this.keywords.addEventListener(FocusEvent.FOCUS_OUT, this.hideKeywords);
+				
+				this.keywordPopup.addChild(l);
+				this.keywordPopup.addChild(this.keywords);
+				
 				this.boxUserInfo.horizontalScrollPolicy = ScrollPolicy.OFF;
 				this.boxUserInfo.verticalScrollPolicy = ScrollPolicy.OFF;
 				this.attachedPhotos.horizontalScrollPolicy = ScrollPolicy.OFF;
@@ -335,10 +349,26 @@
 				this.resize();
 			}
 			
+			private function showKeywords() {
+				this.keywordPopup.width = 350;
+				this.keywordPopup.height = 100;
+				this.keywordPopup.setStyle("backgroundColor", "#afafaf");
+				this.keywordPopup.x = (this.container.width - this.keywordPopup.width) / 2
+				this.keywordPopup.y = (this.container.height - this.keywordPopup.height) / 2
+				this.keywords.width = 350;
+				this.keywords.height = 50;
+				
+				PopUpManager.addPopUp(this.keywordPopup, this, true);
+			}
 			
+			private function hideKeywords(event:FocusEvent) {
+				PopUpManager.removePopUp(this.keywordPopup);
+			}
 			
 			private function editLocation(event:MouseEvent) {
+				this.locationBox.setChildIndex(this.changeLocation, 0);
 				this.txtLocation.setVisible(false);
+				this.changeLocation.text = this.txtLocation.text;
 				this.changeLocation.setVisible(true);
 				this.changeLocation.setFocus();
 			}
@@ -346,6 +376,7 @@
 			private function updateLocationTxt(event:FocusEvent) {
 				this.changeLocation.setVisible(false);
 				this.txtLocation.setVisible(true);
+				this.locationBox.setChildIndex(this.txtLocation, 0);
 				twitter.updateLocation(changeLocation.text,this.updateLocationListener);
 				
 			}
@@ -442,19 +473,19 @@
 						break;
 						case 2:
 							this.cnvPublicTimeline.removeAllChildren();
-							this.twitter.getPublicTimeline(this.user.screen_name, 20, "1", this.getPublicTimelineListener);
+							this.twitter.getPublicTimeline(this.user.screen_name, 50, "1", this.getPublicTimelineListener);
 							//var tl:Timeline = this.cnvPublicTimeline; 
 							//this.twitter.getPublicTimeline(this.user.screen_name, 20, tl.last_id, tl.getTimelineListener);
 						break;
 						case 3:
 							this.cnvFriendsTimeline.removeAllChildren();
-							this.twitter.getFriendsTimeline(this.user.screen_name, 20, "1", this.getFriendsTimelineListener);
+							this.twitter.getFriendsTimeline(this.user.screen_name, 50, "1", this.getFriendsTimelineListener);
 							//var tl:Timeline = this.cnvFriendsTimeline; 
 							//this.twitter.getFriendsTimeline(this.user.screen_name, 20, tl.last_id, tl.getTimelineListener);
 						break;
 						case 4:
 							this.cnvUserTimeline.removeAllChildren();
-							this.twitter.getUserTimeline(this.user.screen_name, 20, "1", this.getUserTimelineListener);
+							this.twitter.getUserTimeline(this.user.screen_name, 50, "1", this.getUserTimelineListener);
 							//var tl:Timeline = this.cnvUserTimeline; 
 							//this.twitter.getUserTimeline(this.user.screen_name, 20, tl.last_id, tl.getTimelineListener);
 						break;
@@ -915,7 +946,7 @@
 					break;
 					
 					case "Edit Keywords":
-						this.loadArchive();
+						this.showKeywords();
 					break;
 				}
 			}
@@ -938,6 +969,9 @@
 						}
 						if (photos != "[photo]") postText(photos);
 					}
+					if (this.keywords.text.length > 0)
+						postText("[key]" + this.keywords.text);					
+					
 					postText(this.statusMessage.text);					
 					postText("[group]");
 				}
