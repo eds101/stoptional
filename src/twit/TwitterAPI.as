@@ -102,7 +102,7 @@ package twit
 				
 				loader.removeEventListener(Event.COMPLETE, loginComplete);
 				
-				if (xml.toString() == "true")
+				if (xml.toString() == "true" || xml.child("error").toString() == "")
 				{
 					this.listenerLogin(true, true);
 				}
@@ -374,7 +374,7 @@ package twit
 			
 		   twitterGet(url, vars, listener);
 		}	
-		public function getRateLimitComplete(event:Event):void{
+		public function getRateLimitComplete(event:Event):void {
 		   try {
 				var loader:URLLoader = URLLoader(event.target);
 				var xml:XML = new XML(loader.data);

@@ -149,11 +149,12 @@ package twit
 			this.timestamp = new Date(d.created_at);			
 		}
 		
-		public function hasKeyword(key:String):Boolean {
-			for each (var k:String in this.keywords) {
-				if (k.toLowerCase() == key.toLowerCase())
-					return true;				
-			}
+		public function hasKeyword(keys:String):Boolean {
+			for each (var key:String in keys.split(" "))
+				for each (var k:String in this.keywords)
+					if (k.toLowerCase() == key.toLowerCase())
+						return true;				
+			
 			return false;
 		}
 		public function getPhotos():Array {
@@ -175,10 +176,9 @@ package twit
 				break;
 				
 				case this.ARCHIVED_MESSAGE:
-					this.menu.setLabels(["Delete from Archive", "More Info", "Enlarge"]);
+					this.menu.setLabels(["More Info", "Delete from Archive", "Enlarge"]);
 					
 				break;
-			
 			}
 		}
 		
