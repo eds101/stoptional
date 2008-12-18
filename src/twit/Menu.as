@@ -86,7 +86,7 @@ package twit
 				this.selection = -1;
 				for (var i:int = 0; i < this.labels.length; i++)
 				{
-					if (radius > 20 && radius < 100 && angle % 2 == 0 && angle / 2 == i)
+					if (radius > 15 && angle % 2 == 0 && angle / 2 == i)
 					{
 						this.labels[i].setStyle("color", "#ffffff");
 						this.selection = i;						
@@ -112,8 +112,8 @@ package twit
 				
 				var angle:Number = i * 2 / this.labels.length;
 				angle *= Math.PI;
-				l.x = this.centerX + Math.cos(angle) * 50 - l.width/2;
-				l.y = this.centerY + Math.sin(angle) * 50 - l.height/2;
+				l.x = this.centerX + Math.cos(angle) * 40 - l.width/2;
+				l.y = this.centerY + Math.sin(angle) * 40 - l.height/2;
 			}
 		}
 		
