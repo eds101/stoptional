@@ -80,7 +80,7 @@
 		<![CDATA[
 			import mx.events.ItemClickEvent;
 			import mx.events.ResizeEvent;
-			import twit.Group;
+			import twit.Message;
 			import twit.Settings;
 			import twit.UserFull;
 			import twit.User;
@@ -166,7 +166,7 @@
 			
 			private function updateUserTimeline():void {
 				if (this.twitter != null)
-					this.twitter.getUserTimeline(this.user.id, 30, this.getUserTimelineListener);
+					this.twitter.getUserTimeline(this.user.id, 30, "", this.getUserTimelineListener);
 				else
 					Alert.show("You must be logged in to update the timeline.");					
 			}
@@ -259,12 +259,14 @@
 				if (success && statuses != null) {
 					for(var i:int = 0; i < statuses.length; i++) {
 						var s:Status = new Status(new XML(statuses[i]));
-						var t:Twit = new Twit(s);
+						var t:Twit = new Twit();
+						t.setText(s.text);
 						var u:String = s.user.screen_name;
 						
 						if (t.text.substr(0, 7) == "[group]")
 						{
-							this.openGroup[u] = new Group(t.text.substr(7));
+							this.openGroup[u] = new Message()
+							Message(this.openGroup[u]).setStatus(t.text.substr(7));
 						}
 						else if (t.text.substr(0, 8) == "[/group]" && this.openGroup[u] != null)
 						{
