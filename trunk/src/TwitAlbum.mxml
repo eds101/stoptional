@@ -179,8 +179,6 @@
 			
 	<mx:Script>
 		<![CDATA[
-			import twit.Direct;
-			
 			import mx.managers.PopUpManager;
 			import mx.events.ChildExistenceChangedEvent;
 			import mx.controls.TabBar;
@@ -188,18 +186,16 @@
 			import mx.core.ScrollPolicy;
 			import mx.events.ItemClickEvent;
 			import mx.events.ResizeEvent;
+			import mx.controls.Alert;
 			import twit.Message;
 			import twit.Settings;
 			import twit.UserFull;
 			import twit.User;
 			import twit.Status;
+			import twit.Direct;
 			import twit.Twit;
 			import twit.TwitPicAPI
 			import twit.TwitterAPI
-			import mx.controls.Alert;
-			
-			private var twitpic:TwitPicAPI = null;
-			private var twitter:TwitterAPI = null;
 			
 			private var timer:Timer = new Timer(30000);
 			
@@ -373,7 +369,7 @@
 				this.changeLocation.setVisible(false);
 				this.txtLocation.setVisible(true);
 				this.locationBox.setChildIndex(this.txtLocation, 0);
-				twitter.updateLocation(changeLocation.text,this.updateLocationListener);
+				Settings.twitter.updateLocation(changeLocation.text,this.updateLocationListener);
 				
 			}
 			
@@ -457,7 +453,7 @@
 			}
 			
 			private function tabChange() {
-				if (this.twitter == null && this.canvas.selectedIndex > 1) {
+				if (Settings.twitter == null && this.canvas.selectedIndex > 1) {
 					Alert.show ("You must login before you may view a timeline.");
 				} else {
 					this.sortBy.selectedIndex = 0;
@@ -469,45 +465,45 @@
 						break;
 						case 2:
 							this.cnvPublicTimeline.removeAllChildren();
-							this.twitter.getPublicTimeline(this.user.screen_name, 50, "1", this.getPublicTimelineListener);
+							Settings.twitter.getPublicTimeline(this.user.screen_name, 50, "1", this.getPublicTimelineListener);
 							//var tl:Timeline = this.cnvPublicTimeline; 
-							//this.twitter.getPublicTimeline(this.user.screen_name, 20, tl.last_id, tl.getTimelineListener);
+							//Settings.twitter.getPublicTimeline(this.user.screen_name, 20, tl.last_id, tl.getTimelineListener);
 						break;
 						case 3:
 							this.cnvFriendsTimeline.removeAllChildren();
-							this.twitter.getFriendsTimeline(this.user.screen_name, 50, "1", this.getFriendsTimelineListener);
+							Settings.twitter.getFriendsTimeline(this.user.screen_name, 50, "1", this.getFriendsTimelineListener);
 							//var tl:Timeline = this.cnvFriendsTimeline; 
-							//this.twitter.getFriendsTimeline(this.user.screen_name, 20, tl.last_id, tl.getTimelineListener);
+							//Settings.twitter.getFriendsTimeline(this.user.screen_name, 20, tl.last_id, tl.getTimelineListener);
 						break;
 						case 4:
 							this.cnvUserTimeline.removeAllChildren();
-							this.twitter.getUserTimeline(this.user.screen_name, 50, "1", this.getUserTimelineListener);
+							Settings.twitter.getUserTimeline(this.user.screen_name, 50, "1", this.getUserTimelineListener);
 							//var tl:Timeline = this.cnvUserTimeline; 
-							//this.twitter.getUserTimeline(this.user.screen_name, 20, tl.last_id, tl.getTimelineListener);
+							//Settings.twitter.getUserTimeline(this.user.screen_name, 20, tl.last_id, tl.getTimelineListener);
 						break;
 						case 5:
 							this.cnvPrivateMessages.removeAllChildren();
-							this.twitter.getDirectMsg(this.getDirectMsgListener);
-							//this.twitter.getSentMsg(this.getSentMsgListener);
+							Settings.twitter.getDirectMsg(this.getDirectMsgListener);
+							//Settings.twitter.getSentMsg(this.getSentMsgListener);
 						break;
 					}
 				}
 			}
 			
 			private function logout():void {
-				if (this.twitter != null)
-					twitter.logout(this.logoutListener);	
+				if (Settings.twitter != null)
+					Settings.twitter.logout(this.logoutListener);	
 			}
 			
 			private function login():void {
-				this.twitter = new TwitterAPI(username.text, password.text);
-				twitter.login(this.loginListener);
+				Settings.twitter = new TwitterAPI(username.text, password.text);
+				Settings.twitter.login(this.loginListener);
 				//Alert.show("Logging in...");				
 			}
 			
 			private function loadUser(sn:String):void {
-				if (this.twitter != null) {
-					twitter.getUser(sn, "", this.loadUserListener);
+				if (Settings.twitter != null) {
+					Settings.twitter.getUser(sn, "", this.loadUserListener);
 				} else {
 					//no need for error msg, since the user cannot directly invoke this method
 					//Alert.show("You are not logged in.");
@@ -515,15 +511,15 @@
 			}
 			
 			private function uploadPhoto():void {
-				if (this.twitpic != null)
-					this.twitpic.upload(this.twitPicListener);
+				if (Settings.twitpic != null)
+					Settings.twitpic.upload(this.twitPicListener);
 				else
 					Alert.show("You must be logged in to upload an image.");
 			}
 			
 			private function updateUserTimeline():void {
-				if (this.twitter != null)
-					this.twitter.getUserTimeline(this.user.id, 20, "", this.getUserTimelineListener);
+				if (Settings.twitter != null)
+					Settings.twitter.getUserTimeline(this.user.id, 20, "", this.getUserTimelineListener);
 				else
 					Alert.show("You must be logged in to update the timeline.");					
 			}
@@ -531,8 +527,8 @@
 			private function timerListener(event:TimerEvent) {
 				if (this.user != null) {
 					this.loadUser(this.user.screen_name);
-					if (this.twitter != null) {
-						this.twitter.getRateLimit(this.getRateLimitListener);
+					if (Settings.twitter != null) {
+						Settings.twitter.getRateLimit(this.getRateLimitListener);
 					}
 				}
 			}
@@ -549,17 +545,17 @@
 				if (!success) {
 					Alert.show("Login failed:\n\nError sending request to server.  Please try again.");
 					
-					this.twitpic = null;
-					this.twitter = null;
+					Settings.twitpic = null;
+					Settings.twitter = null;
 				} else if (!authenticated) {
 					Alert.show("Login failed:\n\nAuthentication rejected.  Please re-enter your username and password.");
 					
-					this.twitpic = null;
-					this.twitter = null;
+					Settings.twitpic = null;
+					Settings.twitter = null;
 				} else {
 					//logged in:
 					//load twitpic
-					this.twitpic = new TwitPicAPI(username.text, password.text);
+					Settings.twitpic = new TwitPicAPI(username.text, password.text);
 					//load user data
 					loadUser(username.text);
 					this.password.text = "";
@@ -576,16 +572,16 @@
 				if (!success) {
 					Alert.show("Logout failed:\n\nError sending request to server.  Please try again.");
 					
-					//this.twitpic = null;
-					//this.twitter = null;
+					//Settings.twitpic = null;
+					//Settings.twitter = null;
 				} else if (!loggedout) {
 					Alert.show("Logout failed:\n\nSession may already be terminated.");
 					
-					//this.twitpic = null;
-					//this.twitter = null;
+					//Settings.twitpic = null;
+					//Settings.twitter = null;
 				} else {
-					this.twitpic = null;
-					this.twitter = null;
+					Settings.twitpic = null;
+					Settings.twitter = null;
 					this.user = null;
 					
 					for each (var row:GridRow in this.boxUserInfo.getChildren()) {						
@@ -841,7 +837,7 @@
 					this.msgQueue.pop(); //toss old msg, which was successful
 					if (this.msgQueue.length > 0) {
 						var text:String = this.msgQueue.pop(); //get next msg
-						this.twitter.updateStatus(text, this.updateStatusListener); //send
+						Settings.twitter.updateStatus(text, this.updateStatusListener); //send
 						this.msgQueue.push(text); //push msg back in in case it doesnt go through
 					} else {
 						this.statusMessage.htmlText = "";
@@ -852,7 +848,7 @@
 					}
 				} else {
 					var text:String = this.msgQueue.pop(); //get next msg
-					this.twitter.updateStatus(text, this.updateStatusListener); //send
+					Settings.twitter.updateStatus(text, this.updateStatusListener); //send
 					this.msgQueue.push(text); //push msg back in in case it doesnt go through
 				}
 			}
@@ -948,7 +944,7 @@
 			}
 			
 			private function postMessage():void {
-				if (this.twitter == null) {
+				if (Settings.twitter == null) {
 					Alert.show("You must login before you can post a message.");
 				} else if (this.statusMessage.text.length == 0) {
 					Alert.show("You may not post a blank status message.  Please enter some text.");	
@@ -974,8 +970,8 @@
 			}
 			
 			private function postImage(url:String):void {
-				if (this.twitter != null) {
-					this.twitter.updateStatus("[photo]" + url, this.updateStatusListener);
+				if (Settings.twitter != null) {
+					Settings.twitter.updateStatus("[photo]" + url, this.updateStatusListener);
 				} else {
 					Alert.show ("You must login before you may post an image.");
 				}
@@ -983,9 +979,9 @@
 			
 			
 			private function postText(text:String):void {
-				if (this.twitter != null) {
+				if (Settings.twitter != null) {
 					this.queueMessage(text);
-//					this.twitter.updateStatus(text, this.updateStatusListener);
+//					Settings.twitter.updateStatus(text, this.updateStatusListener);
 				} else {
 					Alert.show ("You must login before you may post a message.");
 				}
@@ -993,7 +989,7 @@
 			
 			private function queueMessage(text:String) {
 				if (this.msgQueue.length == 0) {
-					twitter.updateStatus(text, this.updateStatusListener);
+					Settings.twitter.updateStatus(text, this.updateStatusListener);
 				} else {
 					this.msgQueue.push(text);
 				}
