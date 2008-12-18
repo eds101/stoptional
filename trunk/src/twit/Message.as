@@ -14,6 +14,7 @@ package twit
 	import mx.controls.Label;
 	import mx.controls.Text;
 	import mx.core.ScrollPolicy;
+	import mx.events.CloseEvent;
 	import mx.events.ResizeEvent;
 	import mx.formatters.DateFormatter;
 	import mx.managers.PopUpManager;
@@ -58,6 +59,7 @@ package twit
 			this.box.addChild(this.keywordContainer);
 			this.box.addChild(this.imageContainer);
 			this.box.addChild(this.textContainer);
+			this.box.autoLayout = true;
 			
 			this.addChild(this.menu);
 			this.addChild(this.box);
@@ -166,12 +168,12 @@ package twit
 			switch(type) {
 			
 				case this.STATUS_MESSAGE:
-					this.menu.setLabels(["Delete", "More Info", "Archive", "Enlarge"]);
+					this.menu.setLabels(["Delete", "Archive", "More Info", "Enlarge"]);
 					
 				break;
 			
 				case this.PRIVATE_MESSAGE:
-					this.menu.setLabels(["Delete", "More Info", "Archive", "Enlarge"]);
+					this.menu.setLabels(["Delete", "Archive", "More Info", "Enlarge"]);
 					
 				break;
 				
@@ -265,11 +267,15 @@ package twit
 				break;
 				
 				case "Delete":
-					this.parent.removeChild(this);
+					Alert.show("Are you sure you want to delete this message?", "Confirm Delete", Alert.YES|Alert.NO, null, function(event:CloseEvent) {
+						if (event.detail == Alert.YES) deleteFromTimeline();
+					}, null, Alert.NO);
 				break;
 				
 				case "Delete from Archive":
-					this.deleteFromArchive();
+					Alert.show("Are you sure you want to delete this message from your archive?", "Confirm Delete", Alert.YES|Alert.NO, null, function(event:CloseEvent) {
+						if (event.detail == Alert.YES) deleteFromArchive();
+					}, null, Alert.NO);
 				break;
 				
 				case "Enlarge":
@@ -280,6 +286,18 @@ package twit
 					this.popupInfo();
 				break;
 			}
+		}
+		
+		public function deleteFromTimeline():void {
+			if (this.author == Settings.getUser().screen_name) {
+				if (Settings.twitter != null)
+					for each (var xml:XML in this.xmls) {
+						Settings.twitter.deleteStatus(xml.child("id"), function(success:Boolean, xml:XML) {
+							
+						});
+					}
+			}
+			this.parent.removeChild(this);
 		}
 		
 		public function popupEnlarge() {

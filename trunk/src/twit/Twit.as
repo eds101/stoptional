@@ -5,8 +5,9 @@ package twit
 	import mx.containers.Canvas;
 	import mx.controls.Image;
 	import mx.controls.Text;
+	import mx.core.ScrollPolicy;
 	import mx.events.ResizeEvent;
-	
+			
 	public class Twit extends mx.containers.Canvas
 	{
 		public var text = "";
@@ -31,6 +32,10 @@ package twit
 			this.borderMetrics.bottom = 2;
 			//this.opaqueBackground = false;
 			
+			this.horizontalScrollPolicy = ScrollPolicy.OFF;
+			this.verticalScrollPolicy = ScrollPolicy.OFF;
+			
+						
 			this.addEventListener(ResizeEvent.RESIZE, this.resize);
 		}
 		

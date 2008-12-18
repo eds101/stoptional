@@ -6,6 +6,8 @@ package twit
 	import flash.net.URLStream;
 	import flash.utils.ByteArray;
 	import mx.controls.Alert;
+	import twit.TwitPicAPI
+	import twit.TwitterAPI
 	
 	public class Settings
 	{
@@ -14,6 +16,7 @@ package twit
 		private static var linkcolor:String;
 		private static var fillcolor:String;
 		private static var bordercolor:String;
+		
 		private static var archiveDir:File = File.applicationStorageDirectory;
 		private static var numItemsPerPage:int;
 		
@@ -22,6 +25,9 @@ package twit
 		public static const ARCHIVE_XML_FILE:File = File.applicationStorageDirectory.resolvePath("archive.xml");
 		private static const DEFAULT_NUM_ITEMS_PER_PAGE = 50;
 		
+		public static var twitpic:TwitPicAPI = null;
+		public static var twitter:TwitterAPI = null;
+
 		
 		
 		public function Settings()
